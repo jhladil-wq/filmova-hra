@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>🎬 Filmáček</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0d0d1a;font-family:system-ui,-apple-system,sans-serif;color:#fff;min-height:100vh}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes slideUp{from{transform:translateY(22px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes slideR{from{transform:translateX(24px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+#home{background:radial-gradient(ellipse at 50% -10%,#22104a,#0d0d1a 65%);align-items:center;padding:0 24px}
+.home-emoji{font-size:70px;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 0 30px rgba(160,100,255,.55));margin-bottom:14px;text-align:center}
+.home-title{font-size:40px;font-weight:900;text-align:center;background:linear-gradient(140deg,#fff 40%,rgba(190,150,255,.75));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.home-sub{font-size:13px;color:rgba(255,255,255,.35);text-align:center;margin-top:8px;margin-bottom:38px}
+.home-cards{display:flex;flex-direction:column;gap:14px;width:100%;max-width:420px}
+.hcard{border-radius:26px;cursor:pointer;overflow:hidden;animation:slideUp .5s ease both;transition:transform .2s}
+.hcard:active{transform:scale(.97)}
+.hcard-body{padding:26px 24px;display:flex;align-items:center;gap:20px}
+.hcard-icon{font-size:42px;flex-shrink:0}
+.hcard-name{font-size:22px;font-weight:900;margin-bottom:4px}
+.hcard-desc{font-size:12px;opacity:.58;line-height:1.45}
+.hcard-arrow{font-size:22px;opacity:.45;flex-shrink:0}
+.home-footer{margin-top:auto;padding:22px 0;font-size:10px;color:rgba(255,255,255,.12);letter-spacing:2px;text-align:center}
+
+.back-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.page-header{padding:52px 0 20px;display:flex;align-items:center;gap:14px}
+.page-title{font-size:22px;font-weight:800}
+.topbar{display:flex;align-items:center;padding:50px 22px 14px;gap:12px}
+.progress-bar{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s}
+
+#vybrat-kviz{background:linear-gradient(160deg,#0d0d1a,#12101e);padding:0 22px}
+.kviz-btn{display:flex;align-items:center;gap:16px;padding:20px;border-radius:22px;border:1.5px solid;cursor:pointer;margin-bottom:13px;transition:transform .2s;animation:slideUp .5s ease both}
+.kviz-btn:active{transform:scale(.97)}
+.kviz-btn-icon{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.kviz-btn-info{flex:1}
+.kviz-btn-name{font-size:20px;font-weight:800;margin-bottom:3px}
+.kviz-btn-sub{font-size:12px;color:rgba(255,255,255,.4)}
+.kviz-btn-hs{text-align:right;flex-shrink:0}
+.kviz-btn-hs-l{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1px}
+.kviz-btn-hs-v{font-size:18px;font-weight:800}
+
+#kviz-anim,#kviz-znalec{background:linear-gradient(160deg,#0d0d1a,#12101e)}
+.kviz-body{flex:1;padding:0 22px 28px;overflow-y:auto;animation:slideR .35s ease}
+.poster-box{margin-bottom:16px;border-radius:16px;overflow:hidden;height:210px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center}
+.poster-box img{width:100%;height:100%;object-fit:cover}
+.opt{display:flex;align-items:center;gap:12px;padding:15px;border-radius:15px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);cursor:pointer;width:100%;text-align:left;margin-bottom:10px;transition:all .25s}
+.opt:active{transform:scale(.98)}
+.opt.ok{background:rgba(52,199,89,.2);border-color:rgba(52,199,89,.7)}
+.opt.err{background:rgba(255,59,48,.2);border-color:rgba(255,59,48,.7)}
+.opt.dim{opacity:.25}
+.opt-letter{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.opt-text{font-size:15px;font-weight:600;flex:1}
+
+.zn-q{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:22px;margin-bottom:20px}
+.zn-q-badge{font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.35);margin-bottom:10px;font-weight:600}
+.zn-q-text{font-size:17px;font-weight:700;line-height:1.55;color:#fff}
+
+#vybrat-hry{background:linear-gradient(160deg,#0d0d1a,#15102a);padding:0 22px}
+.hry-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-bottom:32px}
+.hra-card{padding:22px 14px 18px;border-radius:20px;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.09);cursor:pointer;text-align:center;transition:transform .2s;animation:slideUp .4s ease both}
+.hra-card:active{transform:scale(.95)}
+.hra-card-emoji{font-size:36px;margin-bottom:10px}
+.hra-card-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.hra-card-desc{font-size:11px;color:rgba(255,255,255,.33);line-height:1.4}
+
+#minihra{background:linear-gradient(160deg,#0d0d1a,#15102a)}
+.mini-topbar{display:flex;align-items:center;justify-content:space-between;padding:50px 22px 18px}
+.mini-topbar-name{font-size:20px;font-weight:800;color:#FFD60A}
+.mini-exit{padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.07);border:none;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer}
+.mini-body{flex:1;padding:0 22px 28px;display:flex;flex-direction:column;align-items:center;gap:14px;overflow-y:auto}
+.mini-lbl{font-size:13px;color:rgba(255,255,255,.5);text-align:center}
+.mini-opt{padding:13px 16px;border-radius:14px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);color:#fff;font-size:14px;font-weight:600;cursor:pointer;width:100%;text-align:left;margin-bottom:8px;transition:all .2s}
+.mini-opt:active{transform:scale(.97)}
+.mini-result{text-align:center;animation:pop .4s ease;width:100%}
+.res-emoji{font-size:52px;margin-bottom:12px}
+.res-title{font-size:20px;font-weight:800;margin-bottom:6px}
+.res-sub{font-size:14px;color:rgba(255,255,255,.45);margin-bottom:20px}
+.res-next{padding:14px 40px;border-radius:16px;background:#FFD60A;border:none;font-size:16px;font-weight:700;color:#000;cursor:pointer}
+
+.pex-karta{border-radius:12px;overflow:hidden;cursor:pointer;aspect-ratio:2/3;background:linear-gradient(135deg,#1a1a2e,#16213e);border:2px solid rgba(255,255,255,.1);position:relative;display:flex;align-items:center;justify-content:center;font-size:28px;transition:transform .15s}
+.pex-karta:active{transform:scale(.95)}
+.pex-karta.odkryta{border-color:rgba(255,255,255,.3)}
+.pex-karta.sparovana{border-color:#34C759;opacity:.65}
+.pex-karta img{width:100%;height:100%;object-fit:cover}
+
+.omal-paleta{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;padding:12px;background:rgba(255,255,255,.06);border-radius:16px;width:100%}
+.omal-bv{width:38px;height:38px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s;flex-shrink:0}
+.omal-bv.on{border-color:#fff;transform:scale(1.22)}
+.omal-wrap{background:#fff9ee;border-radius:16px;overflow:hidden;width:100%}
+.omal-wrap svg{display:block;width:100%}
+.omal-btns{display:flex;gap:10px;width:100%}
+.omal-btn{flex:1;padding:12px;border-radius:14px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
+.omal-btn.z{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3);color:#FFD60A}
+.omal-tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;width:100%}
+.omal-tab{padding:7px 14px;border-radius:18px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;color:rgba(255,255,255,.5);flex-shrink:0;transition:all .2s}
+.omal-tab.on{border-color:rgba(255,220,80,.6);background:rgba(255,220,80,.12);color:#FFD60A}
+
+#vysledky{background:linear-gradient(160deg,#0d0d1a,#12101e);align-items:center;justify-content:center;padding:40px 22px}
+.vysl-wrap{width:100%;max-width:440px}
+.vysl-emoji{font-size:72px;text-align:center;margin-bottom:14px;animation:pop .6s cubic-bezier(.34,1.56,.64,1)}
+.vysl-title{font-size:26px;font-weight:900;text-align:center;margin-bottom:6px}
+.vysl-sub{font-size:14px;color:rgba(255,255,255,.4);text-align:center}
+.vysl-new{margin-top:10px;font-size:13px;color:#FFD60A;font-weight:700;text-align:center;animation:pulse 1s infinite}
+.stats-row{display:flex;width:100%;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);overflow:hidden;margin:26px 0 12px}
+.stat-col{flex:1;padding:16px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.07)}
+.stat-col:last-child{border-right:none}
+.stat-v{font-size:20px;font-weight:900;margin-bottom:3px}
+.stat-l{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1px}
+.rekord-row{width:100%;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);padding:14px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.rekord-l{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-bottom:2px}
+.rekord-v{font-size:16px;font-weight:700}
+.prog-bar{height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin:10px 0 4px;width:100%}
+.prog-fill{height:100%;border-radius:3px;transition:width .3s}
+.prog-text{font-size:11px;color:rgba(255,255,255,.35);text-align:center}
+</style>
+
+</head>
+<body>
+
+<div id="home" class="screen active">
+  <div style="padding-top:70px;width:100%;max-width:420px;text-align:center">
+    <div class="home-emoji">🎬</div>
+    <div class="home-title">Filmáček</div>
+    <div class="home-sub">Kvízy a hry o filmech</div>
+  </div>
+  <div class="home-cards">
+    <div class="hcard" style="background:linear-gradient(135deg,#1a2a4a,#0f1a30);animation-delay:.1s" onclick="showScreen('vybrat-kviz')">
+      <div class="hcard-body">
+        <div class="hcard-icon">🎬</div>
+        <div style="flex:1"><div class="hcard-name">Kvíz</div><div class="hcard-desc">Obrázky · Otázky</div></div>
+        <div class="hcard-arrow">›</div>
+      </div>
+    </div>
+    <div class="hcard" style="background:linear-gradient(135deg,#2a1a4a,#1a0f35);animation-delay:.2s" onclick="showScreen('vybrat-hry')">
+      <div class="hcard-body">
+        <div class="hcard-icon">🎮</div>
+        <div style="flex:1"><div class="hcard-name">Hry</div><div class="hcard-desc">Uhádni studio · Puzzle · Pexeso · Omalovánky</div></div>
+        <div class="hcard-arrow">›</div>
+      </div>
+    </div>
+  </div>
+  <div class="home-footer">by JiHl · Data: OMDb</div>
+</div>
+
+<div id="vybrat-kviz" class="screen">
+  <div style="padding:0 22px;flex:1;background:linear-gradient(160deg,#0d0d1a,#12101e)">
+    <div class="page-header">
+      <button class="back-btn" onclick="showScreen('home')">←</button>
+      <div class="page-title">🎬 Kvíz</div>
+    </div>
+    <p style="font-size:13px;color:rgba(255,255,255,.35);margin-bottom:22px">Vyber obtížnost</p>
+    <div class="kviz-btn" style="background:rgba(255,184,48,.1);border-color:rgba(255,184,48,.35);animation-delay:.1s" onclick="spustitKviz('anim')">
+      <div class="kviz-btn-icon" style="background:rgba(255,184,48,.15)">🎨</div>
+      <div class="kviz-btn-info">
+        <div class="kviz-btn-name">Obrázky</div>
+        <div class="kviz-btn-sub">Plakát · uhádni název · filmy do 13 let</div>
+      </div>
+      <div id="hs-anim" class="kviz-btn-hs"></div>
+      <div style="color:#FFB830;font-size:20px;opacity:.6">›</div>
+    </div>
+    <div class="kviz-btn" style="background:rgba(232,68,90,.1);border-color:rgba(232,68,90,.35);animation-delay:.2s" onclick="spustitKviz('znalec')">
+      <div class="kviz-btn-icon" style="background:rgba(232,68,90,.15)">🧠</div>
+      <div class="kviz-btn-info">
+        <div class="kviz-btn-name">Otázky</div>
+        <div class="kviz-btn-sub">Bez obrázku · jen otázka · pro filmové fanoušky</div>
+      </div>
+      <div id="hs-znalec" class="kviz-btn-hs"></div>
+      <div style="color:#E8445A;font-size:20px;opacity:.6">›</div>
+    </div>
+  </div>
+</div>
+
+<div id="kviz-anim" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="potvrzeniZpet('vybrat-kviz')">←</button>
+    <div class="progress-bar"><div id="ka-prog" class="progress-fill" style="background:#FFB830"></div></div>
+    <div style="display:flex;align-items:center;gap:5px"><span style="color:#FFD60A;font-size:13px">★</span><span id="ka-skore" style="font-size:15px;font-weight:700">0</span></div>
+  </div>
+  <div class="kviz-body" id="ka-body"></div>
+</div>
+
+<div id="kviz-znalec" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="potvrzeniZpet('vybrat-kviz')">←</button>
+    <div class="progress-bar"><div id="kz-prog" class="progress-fill" style="background:#E8445A"></div></div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <span style="color:#FFD60A;font-size:13px">★</span>
+      <span id="kz-skore" style="font-size:15px;font-weight:700">0</span>
+      <span id="kz-serie" style="font-size:11px;color:#FF9F0A;margin-left:3px"></span>
+    </div>
+  </div>
+  <div class="kviz-body" id="kz-body"></div>
+</div>
+
+<div id="vybrat-hry" class="screen">
+  <div style="background:linear-gradient(160deg,#0d0d1a,#15102a);padding:0 22px;flex:1">
+    <div class="page-header">
+      <button class="back-btn" onclick="showScreen('home')">←</button>
+      <div class="page-title">🎮 Hry</div>
+    </div>
+    <p style="font-size:13px;color:rgba(255,255,255,.35);margin-bottom:20px">Vyber si hru</p>
+    <div class="hry-grid" id="hry-grid"></div>
+  </div>
+</div>
+
+<div id="minihra" class="screen">
+  <div style="background:linear-gradient(160deg,#0d0d1a,#15102a);flex:1;display:flex;flex-direction:column">
+    <div class="mini-topbar">
+      <div id="mini-name" class="mini-topbar-name"></div>
+      <button class="mini-exit" onclick="potvrzeniZpet('vybrat-hry')">✕ Konec</button>
+    </div>
+    <div class="mini-body" id="mini-body"></div>
+  </div>
+</div>
+
+<div id="vysledky" class="screen">
+  <div class="vysl-wrap">
+    <div id="v-emoji" class="vysl-emoji"></div>
+    <div id="v-title" class="vysl-title"></div>
+    <div id="v-sub" class="vysl-sub"></div>
+    <div id="v-new" class="vysl-new" style="display:none">🎊 Nový rekord!</div>
+    <div class="stats-row">
+      <div class="stat-col"><div id="v-spravne" class="stat-v"></div><div class="stat-l">SPRÁVNĚ</div></div>
+      <div class="stat-col"><div id="v-pct" class="stat-v" style="color:#FFD60A"></div><div class="stat-l">ÚSPĚŠNOST</div></div>
+      <div class="stat-col"><div id="v-serie" class="stat-v" style="color:#FF9F0A"></div><div class="stat-l">SÉRIE</div></div>
+    </div>
+    <div class="rekord-row">
+      <div><div class="rekord-l">🏅 REKORD</div><div id="v-rekord" class="rekord-v"></div></div>
+    </div>
+    <button id="v-znovu" class="opt" style="margin-bottom:10px;border-radius:18px;font-size:17px;font-weight:800;color:#000;cursor:pointer" onclick="znovu()">↺ Hrát znovu</button>
+    <button style="padding:14px;border-radius:16px;background:rgba(255,255,255,.06);border:none;font-size:14px;color:rgba(255,255,255,.4);cursor:pointer;width:100%" onclick="showScreen('home')">🏠 Domů</button>
+  </div>
+</div>
+
+<script>
+const OMDB = '11f70c2b';
+const CACHE = {};
+
+const ANIMOVANE = [
+  {id:'a1',title:'Lví král',year:1994,imdb:'tt0110357'},
+  {id:'a2',title:'Toy Story',year:1995,imdb:'tt0114709'},
+  {id:'a3',title:'Jak vycvičit draka',year:2010,imdb:'tt0892769'},
+  {id:'a4',title:'Ledové království',year:2013,imdb:'tt2294629'},
+  {id:'a5',title:'Hledá se Nemo',year:2003,imdb:'tt0266543'},
+  {id:'a6',title:'Shrek',year:2001,imdb:'tt0126029'},
+  {id:'a7',title:'Ratatouille',year:2007,imdb:'tt0382932'},
+  {id:'a8',title:'Madagaskar',year:2005,imdb:'tt0351283'},
+  {id:'a9',title:'Úžasňákovi',year:2004,imdb:'tt0317705'},
+  {id:'a10',title:'Kung Fu Panda',year:2008,imdb:'tt0441773'},
+  {id:'a11',title:'Moana',year:2016,imdb:'tt3521164'},
+  {id:'a12',title:'Coco',year:2017,imdb:'tt2380307'},
+  {id:'a13',title:'Encanto',year:2021,imdb:'tt2953050'},
+  {id:'a14',title:'Zpívej',year:2016,imdb:'tt3470600'},
+  {id:'a15',title:'Minioni',year:2015,imdb:'tt2293640'}
+];
+
+const ZNALEC = [
+  // Lví král
+  {q:'Ve kterém roce byl natočen Lví král?',a:'1994',m:['1992','1993','1994','1996']},
+  {q:'Jak se jmenuje Simbův otec?',a:'Mufasa',m:['Scar','Mufasa','Zazu','Rafiki']},
+  {q:'Jak se jmenuje záporák v Lvím králi?',a:'Scar',m:['Scar','Hyena','Zazu','Banzai']},
+  {q:'Kdo je Simbův nejlepší přítel z dětství?',a:'Nala',m:['Nala','Timon','Pumba','Zazu']},
+  // Toy Story
+  {q:'Kdo je záporák v Toy Story 1?',a:'Sid',m:['Lotso','Zurg','Sid','Pete']},
+  {q:'Jak se jmenuje dívka, která najde Woodyho ve 2. díle?',a:'Jessiina fanynka',m:['Emily','Sarah','Jessiina fanynka','Bonnie']},
+  {q:'Co je Buzz Lightyear zač?',a:'Astronaut',m:['Voják','Astronaut','Detektiv','Pilot']},
+  {q:'Jak se jmenuje chlapec, jemuž Woody patří?',a:'Andy',m:['Andy','Sid','Bonnie','Al']},
+  // Jak vycvičit draka
+  {q:'Jak se jmenuje drak v Jak vycvičit draka?',a:'Bezzubka',m:['Skála','Bezzubka','Ohníček','Bleskáč']},
+  {q:'Z jaké vesnice pochází Hiccup?',a:'Berk',m:['Berk','Arendelle','Motunui','DunBroch']},
+  // Ledové království
+  {q:'Kolik sester má Elsa?',a:'Jednu – Annu',m:['Žádnou','Dvě','Jednu – Annu','Tři']},
+  {q:'Kdo zpívá Let It Go?',a:'Elsa',m:['Anna','Elsa','Olaf','Kristoff']},
+  {q:'Jak se jmenuje sněhulák v Ledovém království?',a:'Olaf',m:['Sven','Olaf','Hans','Kristoff']},
+  {q:'Kdo je princ Hans původem z?',a:'Jižních ostrovů',m:['Severu','Jižních ostrovů','Arendellu','Francie']},
+  // Hledá se Nemo
+  {q:'Jak se jmenuje otec Nema?',a:'Marlin',m:['Nemo','Marlin','Gill','Crush']},
+  {q:'Jak se jmenuje ryba, která pomáhá Marlinovi?',a:'Dory',m:['Dory','Pearl','Gill','Bloat']},
+  {q:'Kde Nemo skončí v záchytné nádrži?',a:'V zubní ordinaci',m:['V akváriu','V oceánu','V zoo','V zubní ordinaci']},
+  {q:'Jaké zvíře je Crush?',a:'Mořská želva',m:['Delfín','Žralok','Mořská želva','Tučňák']},
+  // Shrek
+  {q:'Jak se jmenuje záporák ve Shrekovi?',a:'Lord Farquaad',m:['Princ Charming','Lord Farquaad','Čarodějnice','Drak']},
+  {q:'Jaká je princezna Fiona ve dne?',a:'Normální dívka',m:['Zlobr','Normální dívka','Elfka','Čarodějnice']},
+  {q:'Jak se jmenuje Shrekův nejlepší přítel?',a:'Osel',m:['Kocour','Osel','Drak','Oslice']},
+  {q:'Ve které pohádkové zemi se odehrává Shrek?',a:'Daleko Daleko',m:['Arendelle','Daleko Daleko','Neverland','Oz']},
+  // Ratatouille
+  {q:'Ve kterém městě se odehrává Ratatouille?',a:'Paříž',m:['Londýn','Paříž','Řím','Madrid']},
+  {q:'Jak se jmenuje hlavní krysa v Ratatouille?',a:'Remy',m:['Remy','Emile','Gusteau','Linguini']},
+  {q:'Jak zní slavná věta kritika Egoa v Ratatouille?',a:'Každý může vařit',m:['Jídlo je umění','Každý může vařit','Vařit je věda','Chuť je vše']},
+  // Madagaskar
+  {q:'Jak se jmenuje hrošice v Madagaskaru?',a:'Gloria',m:['Melman','Alex','Marty','Gloria']},
+  {q:'Jak se jmenuje lev z Madagaskaru?',a:'Alex',m:['Marty','Alex','Melman','Maurice']},
+  {q:'Z jaké zoo pochází zvířata v Madagaskaru?',a:'Central Park Zoo',m:['Bronx Zoo','Central Park Zoo','San Diego Zoo','Berlín Zoo']},
+  // Úžasňákovi
+  {q:'Jakou superschopnost má Dash?',a:'Superrychlost',m:['Neviditelnost','Superrychlost','Elasticita','Létání']},
+  {q:'Jak se jmenuje módní návrhářka v Úžasňácích?',a:'Edna Mode',m:['Mirage','Edna Mode','Helen','Violet']},
+  {q:'Jakou schopnost má Violet?',a:'Neviditelnost a štíty',m:['Neviditelnost a štíty','Létání','Superrychlost','Telekineze']},
+  // Kung Fu Panda
+  {q:'Kde žije Kung Fu Panda?',a:'Údolí míru',m:['Chrám draka','Údolí míru','Hora jang','Říční vesnice']},
+  {q:'Jak se jmenuje záporák v Kung Fu Pandě 1?',a:'Tai Lung',m:['Kai','Tai Lung','Lord Shen','Temný vládce']},
+  {q:'Jak se jmenuje Pův učitel?',a:'Mistr Shifu',m:['Mistr Oogway','Mistr Shifu','Mistr Mantis','Mistr Crane']},
+  // Moana
+  {q:'Z jakého ostrova pochází Moana?',a:'Motunui',m:['Hawaii','Fiji','Motunui','Bora Bora']},
+  {q:'Kdo ukradl srdce Te Fiti?',a:'Maui',m:['Tamatoa','Moana','Maui','Te Ka']},
+  // Coco
+  {q:'Jaký nástroj hraje Miguel v Coco?',a:'Kytara',m:['Trubka','Kytara','Piano','Housle']},
+  {q:'Kdo je skutečným hrdinou v Coco?',a:'Hector',m:['Ernesto','Hector','Chicharron','Imelda']},
+  // Encanto
+  {q:'Jak se jmenuje rodina v Encanto?',a:'Madrigal',m:['Castillo','Madrigal','Rivera','Mirabel']},
+  {q:'Jaký dar nemá Mirabel v Encanto?',a:'Nemá žádný dar',m:['Léčení','Síla','Nemá žádný dar','Rostliny']},
+  // Zpívej
+  {q:'Jaké zvíře je Buster Moon v Zpívej?',a:'Koala',m:['Medvěd','Koala','Klokan','Tapír']},
+  {q:'Co chce Buster Moon zachránit v Zpívej?',a:'Divadlo',m:['Školu','Divadlo','Cirkus','Kino']},
+  // Minioni
+  {q:'Jakou barvu mají Minioni?',a:'Žlutou',m:['Modrou','Zelenou','Žlutou','Oranžovou']},
+  {q:'Pro koho pracují Minioni celé dějiny?',a:'Pro největšího záporáka',m:['Pro hrdiny','Pro největšího záporáka','Pro krále','Pro science']},
+];
+
+const STUDIA = [
+  {id:'disney',name:'Disney',emoji:'🏰',barva:'#4488ff',filmy:['a1','a4','a11','a13']},
+  {id:'pixar',name:'Pixar',emoji:'🏢',barva:'#FF6B35',filmy:['a2','a5','a7','a12']},
+  {id:'dreamworks',name:'DreamWorks',emoji:'🐉',barva:'#7cb518',filmy:['a6','a10','a3','a8']},
+  {id:'illumination',name:'Illumination',emoji:'🎤',barva:'#FFD60A',filmy:['a15','a14','a9']}
+];
+
+const HRY_DEF = [
+  {id:'spoj',emoji:'🏢',name:'Uhádni studio',desc:'Ke kterému studiu patří film?'},
+  {id:'puzzle',emoji:'🧩',name:'Puzzle',desc:'Slož plakát z 9 dílků!'},
+  {id:'pexeso',emoji:'🃏',name:'Pexeso',desc:'Najdi dvojice plakátů!'},
+  {id:'omalov',emoji:'🖍️',name:'Omalovánky',desc:'Vybarvi filmovou postavu!'}
+];
+
+const OMAL_BARVY = ['#7cb518','#f5c842','#e8a020','#8b4513','#87ceeb','#4488ff','#ff6b6b','#e81c3a','#fff','#ffb347','#aaa','#333'];
+const OMAL_POSTAVY = [
+  {name:'Shrek',emoji:'🟢',barva:'#7cb518',vw:400,vh:520,seg:[
+    {id:'obloha',l:'Obloha',d:'M0,0 H400 V180 Q200,158 0,180Z'},
+    {id:'slunce',l:'Slunce',d:'M340,50 m-36,0 a36,36 0 1,0 72,0 a36,36 0 1,0 -72,0'},
+    {id:'trava',l:'Louka',d:'M0,318 Q200,295 400,318 L400,520 L0,520Z'},
+    {id:'blato',l:'Blátiště',d:'M120,408 Q200,385 280,408 Q295,432 200,442 Q105,432 120,408Z'},
+    {id:'strom',l:'Strom',d:'M20,318 Q14,255 24,228 Q30,215 38,215 Q46,215 52,228 Q62,255 56,318Z M0,265 Q38,225 76,265 Q58,282 38,285 Q18,282 0,265Z'},
+    {id:'telo',l:'Tělo',d:'M138,268 Q115,325 122,385 Q148,432 195,440 Q200,442 205,440 Q252,432 278,385 Q285,325 262,268 Q240,230 200,224 Q160,230 138,268Z'},
+    {id:'kosile',l:'Košile',d:'M142,272 Q168,248 200,242 Q232,248 258,272 L260,340 Q232,356 200,360 Q168,356 140,340Z'},
+    {id:'kalhoty',l:'Kalhoty',d:'M122,385 Q148,432 195,440 Q200,442 205,440 Q252,432 278,385 L262,370 Q240,398 200,404 Q160,398 138,370Z'},
+    {id:'ruka_l',l:'Ruka levá',d:'M140,272 Q108,292 92,335 Q85,362 102,378 Q122,392 142,375 Q130,348 138,315 Q140,295 148,280Z M72,345 Q55,340 48,358 Q50,380 70,386 Q92,390 105,372 Q115,358 104,346 Q92,340 76,342Z'},
+    {id:'ruka_p',l:'Ruka pravá',d:'M260,272 Q292,292 308,335 Q315,362 298,378 Q278,392 258,375 Q270,348 262,315 Q260,295 252,280Z M328,345 Q345,340 352,358 Q350,380 330,386 Q308,390 295,372 Q285,358 296,346 Q308,340 324,342Z'},
+    {id:'hlava',l:'Hlava',d:'M78,148 Q75,72 130,46 Q160,33 200,31 Q240,33 270,46 Q325,72 322,148 Q320,215 270,230 Q238,242 200,244 Q162,242 130,230 Q80,215 78,148Z'},
+    {id:'ucho_l',l:'Ucho levé',d:'M78,128 Q50,108 46,138 Q44,165 76,169 Q86,163 90,148Z'},
+    {id:'ucho_p',l:'Ucho pravé',d:'M322,128 Q350,108 354,138 Q356,165 324,169 Q314,163 310,148Z'},
+    {id:'oko_l',l:'Oko levé',d:'M96,138 Q94,102 136,98 Q174,98 175,136 Q175,170 135,172 Q96,170 96,138Z'},
+    {id:'oko_p',l:'Oko pravé',d:'M225,138 Q224,102 264,98 Q304,98 304,136 Q303,170 263,172 Q225,170 225,138Z'},
+    {id:'nos',l:'Nos',d:'M165,178 Q172,200 184,214 Q192,222 200,224 Q208,222 216,214 Q228,200 235,178 Q218,166 200,164 Q182,166 165,178Z'},
+    {id:'usta',l:'Ústa',d:'M138,226 Q200,262 262,226 Q240,248 200,252 Q160,248 138,226Z'},
+    {id:'tvare',l:'Tváře',d:'M80,180 m-20,0 a20,20 0 1,0 40,0 a20,20 0 1,0 -40,0 M320,180 m-20,0 a20,20 0 1,0 40,0 a20,20 0 1,0 -40,0'}
+  ]},
+  {name:'Simba',emoji:'🦁',barva:'#e8a020',vw:400,vh:520,seg:[
+    {id:'obloha',l:'Obloha',d:'M0,0 H400 V185 Q200,162 0,185Z'},
+    {id:'slunce',l:'Slunce',d:'M340,52 m-38,0 a38,38 0 1,0 76,0 a38,38 0 1,0 -76,0'},
+    {id:'trava',l:'Savana',d:'M0,325 Q200,300 400,325 L400,520 L0,520Z'},
+    {id:'akace',l:'Akácie',d:'M330,325 Q324,268 334,245 Q340,232 346,232 Q352,232 358,245 Q368,268 362,325Z M310,275 Q346,238 382,275 Q366,292 346,295 Q326,292 310,275Z'},
+    {id:'telo',l:'Tělo',d:'M132,278 Q108,338 115,398 Q140,448 190,458 Q200,460 210,458 Q260,448 285,398 Q292,338 268,278 Q245,238 200,230 Q155,238 132,278Z'},
+    {id:'hriva',l:'Hříva',d:'M80,155 Q75,72 132,44 Q160,30 200,28 Q240,30 268,44 Q325,72 320,155 Q305,115 270,102 Q242,92 200,90 Q158,92 130,102 Q95,115 80,155Z'},
+    {id:'hlava',l:'Hlava',d:'M88,155 Q85,78 200,68 Q315,78 312,155 Q310,218 265,232 Q238,242 200,244 Q162,242 135,232 Q90,218 88,155Z'},
+    {id:'ucho_l',l:'Ucho levé',d:'M88,125 Q60,102 56,132 Q54,158 86,162 Q98,156 102,140Z'},
+    {id:'ucho_p',l:'Ucho pravé',d:'M312,125 Q340,102 344,132 Q346,158 314,162 Q302,156 298,140Z'},
+    {id:'brisko',l:'Bříško',d:'M148,310 Q200,290 252,310 Q260,358 200,368 Q140,358 148,310Z'},
+    {id:'nohy',l:'Nohy',d:'M120,398 Q108,428 112,452 Q128,468 155,465 Q175,462 178,445 Q172,422 165,398Z M280,398 Q292,428 288,452 Q272,468 245,465 Q225,462 222,445 Q228,422 235,398Z'},
+    {id:'ocas',l:'Ocas',d:'M278,368 Q318,340 335,358 Q345,380 325,392 Q305,398 285,382Z'},
+    {id:'oko_l',l:'Oko levé',d:'M102,132 Q100,98 140,94 Q176,94 177,130 Q177,162 139,165 Q102,162 102,132Z'},
+    {id:'oko_p',l:'Oko pravé',d:'M223,132 Q222,98 260,94 Q298,94 298,130 Q297,162 259,165 Q223,162 223,132Z'},
+    {id:'nos',l:'Nos',d:'M172,185 Q180,205 192,216 Q196,222 200,223 Q204,222 208,216 Q220,205 228,185 Q212,174 200,172 Q188,174 172,185Z'},
+    {id:'usta',l:'Ústa',d:'M145,228 Q200,262 255,228 Q235,248 200,252 Q165,248 145,228Z'},
+    {id:'tvare',l:'Tváře',d:'M84,185 m-18,0 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0 M316,185 m-18,0 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0'}
+  ]},
+  {name:'Nemo',emoji:'🐟',barva:'#ff6b35',vw:400,vh:420,seg:[
+    {id:'voda',l:'Voda',d:'M0,0 H400 V420 L0,420Z'},
+    {id:'pisek',l:'Dno',d:'M0,340 Q200,318 400,340 L400,420 L0,420Z'},
+    {id:'koral_l',l:'Korál',d:'M30,340 Q22,295 32,268 Q38,255 44,268 Q50,295 48,310 Q58,295 62,278 Q66,268 70,278 Q68,298 58,318 Q65,330 50,340Z'},
+    {id:'koral_p',l:'Korál',d:'M340,340 Q332,295 342,268 Q348,255 354,268 Q360,295 358,310 Q368,295 372,278 Q376,268 380,278 Q378,298 368,318 Q375,330 360,340Z'},
+    {id:'telo',l:'Tělo',d:'M72,198 Q68,142 135,115 Q162,104 200,100 Q238,104 265,115 Q332,142 328,198 Q322,258 200,268 Q78,258 72,198Z'},
+    {id:'pruh1',l:'Pruh 1',d:'M138,110 Q144,188 138,262 Q152,266 158,188 Q152,110 138,110Z'},
+    {id:'pruh2',l:'Pruh 2',d:'M212,108 Q218,188 212,264 Q226,268 232,188 Q226,108 212,108Z'},
+    {id:'brisko',l:'Bříško',d:'M128,198 Q200,178 272,198 Q268,240 200,248 Q132,240 128,198Z'},
+    {id:'plutev',l:'Ploutev',d:'M158,100 Q180,58 222,50 Q235,72 242,98 Q222,88 200,86 Q178,88 158,100Z'},
+    {id:'ocas',l:'Ocas',d:'M318,168 Q355,140 368,170 Q355,200 318,228Z M342,128 Q368,108 380,132 Q368,155 342,148Z M342,208 Q368,228 380,208 Q368,185 342,192Z'},
+    {id:'oko',l:'Oko',d:'M100,168 Q98,138 130,135 Q160,135 160,167 Q159,196 129,198 Q99,196 100,168Z'},
+    {id:'zor',l:'Zornice',d:'M108,166 Q107,147 130,145 Q151,147 150,166 Q149,183 129,184 Q108,182 108,166Z'}
+  ]}
+];
+
+let kaOtazky = [], kaIdx = 0, kaSkore = 0, kaSerie = 0, kaNejSerie = 0, kaTyp = 'anim';
+let aktHra = null;
+let spojKola = [], spojKoloIdx = 0, spojSkore = 0, spojVybranyFilm = null, spojSpojeni = {};
+let puzzleFilm = null, puzzleDilky = [], puzzleSel = null, puzzleTahy = 0, puzzleSrc = null;
+let pexKarty = [], pexOdkryte = [], pexSpar = [], pexPokusy = 0, pexCeka = false;
+let omalB = '#7cb518', omalStav = {}, omalIdx = 0;
+
+function mix(a) { return a.slice().sort(function() { return Math.random() - 0.5; }); }
+function getHS(k) { try { return parseInt(localStorage.getItem('fc_' + k) || '0', 10); } catch(e) { return 0; } }
+function setHS(k, n) { try { localStorage.setItem('fc_' + k, String(n)); } catch(e) {} }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+  try { sessionStorage.setItem('fc_screen', id); } catch(e) {}
+}
+
+function potvrzeniZpet(cil) {
+  if (confirm('Ukončit?')) showScreen(cil || 'home');
+}
+
+function getPoster(imdb, cb) {
+  if (CACHE[imdb]) { cb(CACHE[imdb]); return; }
+  fetch('https://www.omdbapi.com/?i=' + imdb + '&apikey=' + OMDB)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var src = d.Poster && d.Poster !== 'N/A' ? d.Poster : null;
+      if (src) CACHE[imdb] = src;
+      cb(src);
+    })
+    .catch(function() { cb(null); });
+}
+
+function refreshHS() {
+  var ha = getHS('anim'), hz = getHS('znalec');
+  var ea = document.getElementById('hs-anim'), ez = document.getElementById('hs-znalec');
+  if (ea) ea.innerHTML = ha > 0 ? '<div class="kviz-btn-hs-l">REKORD</div><div class="kviz-btn-hs-v" style="color:#FFB830">' + ha + '/10</div>' : '';
+  if (ez) ez.innerHTML = hz > 0 ? '<div class="kviz-btn-hs-l">REKORD</div><div class="kviz-btn-hs-v" style="color:#E8445A">' + hz + '/10</div>' : '';
+}
+
+// ═══ KVÍZ ANIMOVANÉ ═══
+function spustitKviz(typ) {
+  kaTyp = typ; kaIdx = 0; kaSkore = 0; kaSerie = 0; kaNejSerie = 0;
+  if (typ === 'anim') {
+    kaOtazky = mix(ANIMOVANE).slice(0, 10);
+    showScreen('kviz-anim');
+    renderAnimQ();
+  } else {
+    kaOtazky = mix(ZNALEC).slice(0, 10);
+    showScreen('kviz-znalec');
+    renderZnalecQ();
+  }
+}
+
+function renderAnimQ() {
+  var q = kaOtazky[kaIdx];
+  document.getElementById('ka-prog').style.width = (kaIdx / kaOtazky.length * 100) + '%';
+  document.getElementById('ka-skore').textContent = kaSkore;
+  var spatne = mix(ANIMOVANE.filter(function(f) { return f.id !== q.id; })).slice(0, 3);
+  var moz = mix([q].concat(spatne));
+  window._animMoz = moz;
+  var pismena = ['A', 'B', 'C', 'D'];
+  var html = '<div class="poster-box" id="ka-poster"><div style="font-size:30px">⏳</div></div>';
+  html += '<div style="text-align:center;font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px">' + q.year + ' · Který film to je?</div>';
+  html += '<div style="padding-bottom:28px">';
+  for (var i = 0; i < moz.length; i++) {
+    html += '<button class="opt" onclick="vybrAnimQ(' + i + ')"><div class="opt-letter" style="background:rgba(255,184,48,.2);color:#FFB830">' + pismena[i] + '</div><span class="opt-text">' + moz[i].title + '</span></button>';
+  }
+  html += '</div>';
+  document.getElementById('ka-body').innerHTML = html;
+  getPoster(q.imdb, function(src) {
+    var pb = document.getElementById('ka-poster');
+    if (pb) pb.innerHTML = src ? '<img src="' + src + '">' : '<div style="font-size:30px">🎬</div>';
+  });
+}
+
+function vybrAnimQ(idx) {
+  var moz = window._animMoz;
+  var q = kaOtazky[kaIdx];
+  var ok = moz[idx].id === q.id;
+  if (ok) { kaSkore++; kaSerie++; if (kaSerie > kaNejSerie) kaNejSerie = kaSerie; } else { kaSerie = 0; }
+  document.getElementById('ka-skore').textContent = kaSkore;
+  var btns = document.getElementById('ka-body').querySelectorAll('.opt');
+  btns.forEach(function(btn, i) {
+    btn.disabled = true;
+    if (moz[i].id === q.id) btn.classList.add('ok');
+    else if (i === idx) btn.classList.add('err');
+    else btn.classList.add('dim');
+  });
+  setTimeout(function() {
+    kaIdx++;
+    if (kaIdx >= kaOtazky.length) zobrazVysledky();
+    else renderAnimQ();
+  }, 1400);
+}
+
+// ═══ KVÍZ ZNALEC ═══
+function renderZnalecQ() {
+  var q = kaOtazky[kaIdx];
+  document.getElementById('kz-prog').style.width = (kaIdx / kaOtazky.length * 100) + '%';
+  document.getElementById('kz-skore').textContent = kaSkore;
+  document.getElementById('kz-serie').textContent = kaSerie >= 2 ? '🔥' + kaSerie : '';
+  var moz = mix(q.m.slice());
+  window._znMoz = moz; window._znSpravne = q.a;
+  var pismena = ['A', 'B', 'C', 'D'];
+  var html = '<div class="zn-q"><div class="zn-q-badge">OTÁZKA ' + (kaIdx + 1) + ' / ' + kaOtazky.length + '</div><div class="zn-q-text">' + q.q + '</div></div>';
+  html += '<div style="padding-bottom:28px">';
+  for (var i = 0; i < moz.length; i++) {
+    html += '<button class="opt" onclick="vybrZnalecQ(' + i + ')"><div class="opt-letter" style="background:rgba(232,68,90,.2);color:#E8445A">' + pismena[i] + '</div><span class="opt-text">' + moz[i] + '</span></button>';
+  }
+  html += '</div>';
+  document.getElementById('kz-body').innerHTML = html;
+}
+
+function vybrZnalecQ(idx) {
+  var moz = window._znMoz, spravne = window._znSpravne;
+  var ok = moz[idx] === spravne;
+  if (ok) { kaSkore++; kaSerie++; if (kaSerie > kaNejSerie) kaNejSerie = kaSerie; } else { kaSerie = 0; }
+  document.getElementById('kz-skore').textContent = kaSkore;
+  document.getElementById('kz-serie').textContent = kaSerie >= 2 ? '🔥' + kaSerie : '';
+  var btns = document.getElementById('kz-body').querySelectorAll('.opt');
+  btns.forEach(function(btn, i) {
+    btn.disabled = true;
+    if (moz[i] === spravne) btn.classList.add('ok');
+    else if (i === idx) btn.classList.add('err');
+    else btn.classList.add('dim');
+  });
+  setTimeout(function() {
+    kaIdx++;
+    if (kaIdx >= kaOtazky.length) zobrazVysledky();
+    else renderZnalecQ();
+  }, 1400);
+}
+
+// ═══ VÝSLEDKY ═══
+function zobrazVysledky() {
+  var pct = kaSkore / kaOtazky.length;
+  var prev = getHS(kaTyp);
+  var jeNovy = kaSkore > prev;
+  if (jeNovy) setHS(kaTyp, kaSkore);
+  var barva = kaTyp === 'anim' ? '#FFB830' : '#E8445A';
+  var r = pct >= .9 ? {e:'🏆',t:'Filmový expert!',s:'Fantastický výsledek!'}
+    : pct >= .7 ? {e:'🎉',t:'Skvělý výsledek!',s:'Filmy ti nejsou cizí'}
+    : pct >= .5 ? {e:'👍',t:'Dobrý pokus!',s:'Ještě procvičit'}
+    : {e:'🎬',t:'Trénuj dál!',s:'Filmy jsou skvělé!'};
+  document.getElementById('v-emoji').textContent = r.e;
+  document.getElementById('v-title').textContent = r.t;
+  document.getElementById('v-sub').textContent = r.s;
+  document.getElementById('v-new').style.display = jeNovy ? 'block' : 'none';
+  document.getElementById('v-spravne').textContent = kaSkore + '/' + kaOtazky.length;
+  document.getElementById('v-spravne').style.color = barva;
+  document.getElementById('v-pct').textContent = Math.round(pct * 100) + '%';
+  document.getElementById('v-serie').textContent = kaNejSerie;
+  document.getElementById('v-rekord').textContent = Math.max(kaSkore, prev) + '/10';
+  document.getElementById('v-rekord').style.color = barva;
+  document.getElementById('v-znovu').style.background = barva;
+  showScreen('vysledky');
+  refreshHS();
+}
+function znovu() { spustitKviz(kaTyp); }
+
+// ═══ HRY ═══
+function renderHryGrid() {
+  document.getElementById('hry-grid').innerHTML = HRY_DEF.map(function(h, i) {
+    return '<div class="hra-card" style="animation-delay:' + (i * .07) + 's" onclick="spustitHru(\'' + h.id + '\')">'
+      + '<div class="hra-card-emoji">' + h.emoji + '</div>'
+      + '<div class="hra-card-name">' + h.name + '</div>'
+      + '<div class="hra-card-desc">' + h.desc + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function spustitHru(hraId) {
+  aktHra = HRY_DEF.find(function(h) { return h.id === hraId; });
+  if (!aktHra) return;
+  document.getElementById('mini-name').textContent = aktHra.emoji + ' ' + aktHra.name;
+  showScreen('minihra');
+  if (hraId === 'spoj') startSpoj();
+  else if (hraId === 'puzzle') startPuzzle();
+  else if (hraId === 'pexeso') startPexeso();
+  else if (hraId === 'omalov') startOmalov();
+}
+
+// ═══ UHÁDNI STUDIO ═══
+// Flow: zobraz film → vyber studio → okamžitá odezva → další film
+
+var studioOtazky = [], studioIdx = 0, studioSkore = 0, studioMoz = [];
+
+function startSpoj() {
+  // Vytvoř otázky: pro každý film ze všech studií
+  var vsechnyFilmy = [];
+  STUDIA.forEach(function(s) {
+    s.filmy.forEach(function(fid) {
+      var f = ANIMOVANE.find(function(x) { return x.id === fid; });
+      if (f) vsechnyFilmy.push({film: f, studio: s});
+    });
+  });
+  studioOtazky = mix(vsechnyFilmy).slice(0, 12);
+  studioIdx = 0; studioSkore = 0;
+  // Prefetch posterů
+  studioOtazky.forEach(function(q) { getPoster(q.film.imdb, function() {}); });
+  renderStudioQ();
+}
+
+function renderStudioQ() {
+  if (studioIdx >= studioOtazky.length) { renderStudioVysledky(); return; }
+  var q = studioOtazky[studioIdx];
+  var src = CACHE[q.film.imdb];
+
+  // 4 možnosti: správné + 3 jiná
+  studioMoz = mix([q.studio].concat(mix(STUDIA.filter(function(s) { return s.id !== q.studio.id; })).slice(0, 3)));
+
+  var html = '<div style="font-size:11px;color:rgba(255,255,255,.35);text-align:center;padding-bottom:10px">'
+    + (studioIdx + 1) + ' / ' + studioOtazky.length
+    + ' &nbsp;·&nbsp; ★ ' + studioSkore + '</div>';
+
+  // Progress bar
+  html += '<div style="width:100%;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-bottom:14px">'
+    + '<div style="width:' + Math.round(studioIdx / studioOtazky.length * 100) + '%;height:100%;background:#FFD60A;border-radius:2px"></div></div>';
+
+  // Film plakát
+  html += '<div id="studio-poster" style="width:160px;height:224px;border-radius:14px;overflow:hidden;background:#1a1a2e;flex-shrink:0;display:flex;align-items:center;justify-content:center">'
+    + (src ? '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="font-size:13px;color:rgba(255,255,255,.4);text-align:center;padding:10px">' + q.film.title + '</div>')
+    + '</div>';
+
+  html += '<div style="font-size:13px;color:rgba(255,255,255,.45);text-align:center">Ke kterému studiu patří?</div>';
+
+  // Studia jako tlačítka
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">';
+  studioMoz.forEach(function(s, si) {
+    html += '<button id="stbtn_' + si + '" onclick="vybrStudio(' + si + ')" style="padding:16px 10px;border-radius:14px;background:' + s.barva + '18;border:1.5px solid ' + s.barva + '40;cursor:pointer;text-align:center;transition:all .2s">'
+      + '<div style="font-size:28px;margin-bottom:4px">' + s.emoji + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:' + s.barva + '">' + s.name + '</div>'
+      + '</button>';
+  });
+  html += '</div>';
+
+  document.getElementById('mini-body').innerHTML = html;
+
+  // Dotáhni poster pokud chybí
+  if (!src) {
+    getPoster(q.film.imdb, function(loaded) {
+      var box = document.getElementById('studio-poster');
+      if (box && loaded) box.innerHTML = '<img src="' + loaded + '" style="width:100%;height:100%;object-fit:cover">';
+    });
+  }
+}
+
+function vybrStudio(si) {
+  var q = studioOtazky[studioIdx];
+  var vybrane = studioMoz[si];
+  var ok = vybrane.id === q.studio.id;
+  if (ok) studioSkore++;
+
+  // Vizuální feedback na tlačítkách
+  studioMoz.forEach(function(s, i) {
+    var btn = document.getElementById('stbtn_' + i);
+    if (!btn) return;
+    btn.disabled = true;
+    if (s.id === q.studio.id) {
+      btn.style.background = 'rgba(52,199,89,.3)';
+      btn.style.borderColor = '#34C759';
+    } else if (i === si) {
+      btn.style.background = 'rgba(255,59,48,.3)';
+      btn.style.borderColor = '#FF3B30';
+    } else {
+      btn.style.opacity = '0.3';
+    }
+  });
+
+  setTimeout(function() {
+    studioIdx++;
+    renderStudioQ();
+  }, ok ? 900 : 1400);
+}
+
+function renderStudioVysledky() {
+  var pct = Math.round(studioSkore / studioOtazky.length * 100);
+  var prev = getHS('spoj');
+  if (studioSkore > prev) setHS('spoj', studioSkore);
+  document.getElementById('mini-body').innerHTML =
+    '<div style="text-align:center;padding:30px 0">'
+    + '<div style="font-size:56px;margin-bottom:14px">' + (pct >= 80 ? '🏆' : pct >= 60 ? '🎉' : '🎬') + '</div>'
+    + '<div style="font-size:22px;font-weight:800;margin-bottom:6px">' + studioSkore + ' / ' + studioOtazky.length + '</div>'
+    + '<div style="font-size:14px;color:rgba(255,255,255,.4);margin-bottom:6px">' + pct + '% úspěšnost</div>'
+    + '<div style="font-size:13px;color:rgba(255,255,255,.3);margin-bottom:24px">' + (pct >= 80 ? 'Znáš studia jako expert!' : pct >= 60 ? 'Dobrá znalost studií' : 'Procvič si studia!') + '</div>'
+    + '<button class="res-next" onclick="startSpoj()">↺ Hrát znovu</button>'
+    + '<br><br><button style="padding:12px 28px;border-radius:14px;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer" onclick="showScreen(\'vybrat-hry\')">← Zpět na hry</button>'
+    + '</div>';
+}
+
+// ═══ PUZZLE ═══
+function startPuzzle() {
+  puzzleFilm = mix(ANIMOVANE)[0];
+  puzzleDilky = mix([0,1,2,3,4,5,6,7,8]);
+  puzzleSel = null; puzzleTahy = 0; puzzleSrc = null;
+  getPoster(puzzleFilm.imdb, function(s) { puzzleSrc = s; renderPuzzle(); });
+}
+
+function renderPuzzle() {
+  var vyreseno = puzzleDilky.every(function(v, i) { return v === i; });
+  var html = '<div class="mini-lbl">🧩 ' + puzzleFilm.title + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,.35);text-align:center">' + puzzleTahy + ' tahů' + (vyreseno ? ' · ✓ Složeno!' : '') + '</div>';
+  if (!vyreseno) {
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:#111;border-radius:12px;overflow:hidden;width:270px;height:360px;flex-shrink:0">';
+    for (var p = 0; p < 9; p++) {
+      var d = puzzleDilky[p], col = d % 3, row = Math.floor(d / 3);
+      var bg = puzzleSrc ? 'background-image:url(' + puzzleSrc + ');background-size:300% 300%;background-position:' + (col * 50) + '% ' + (row * 50) + '%' : 'background:#2a2a3e';
+      html += '<div style="overflow:hidden;cursor:pointer;border:2px solid ' + (puzzleSel === p ? '#FFD60A' : 'transparent') + ';border-radius:4px;' + bg + '" onclick="klikPuzzle(' + p + ')"></div>';
+    }
+    html += '</div>';
+    html += '<button class="mini-opt" style="text-align:center" onclick="startPuzzle()">🔀 Nový film</button>';
+  } else {
+    html += '<div class="mini-result"><div class="res-emoji">🏆</div><div class="res-title">Složeno za ' + puzzleTahy + ' tahů!</div><button class="res-next" onclick="startPuzzle()">Nový film ›</button></div>';
+  }
+  document.getElementById('mini-body').innerHTML = html;
+}
+
+function klikPuzzle(pos) {
+  if (puzzleSel === null) { puzzleSel = pos; }
+  else {
+    var n = puzzleDilky.slice(), t = n[puzzleSel]; n[puzzleSel] = n[pos]; n[pos] = t;
+    puzzleDilky = n; puzzleTahy++; puzzleSel = null;
+  }
+  renderPuzzle();
+}
+
+// ═══ PEXESO ═══
+function startPexeso() {
+  var vybrane = mix(ANIMOVANE).slice(0, 6);
+  pexKarty = mix(vybrane.concat(vybrane)).map(function(f, i) {
+    return {id: f.id, imdb: f.imdb, pos: i, odkryta: false, sparovana: false};
+  });
+  pexOdkryte = []; pexSpar = []; pexPokusy = 0; pexCeka = false;
+  renderPexeso();
+}
+
+function renderPexeso() {
+  var hotovo = pexSpar.length === pexKarty.length / 2;
+  var html = '<div style="display:flex;gap:16px;justify-content:center;font-size:13px;color:rgba(255,255,255,.5);margin-bottom:6px">'
+    + '<span>Pokusy: <b style="color:#fff">' + pexPokusy + '</b></span>'
+    + '<span>Nalezeno: <b style="color:#34C759">' + pexSpar.length + '/' + (pexKarty.length / 2) + '</b></span></div>'
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%">';
+  pexKarty.forEach(function(k) {
+    html += '<div class="pex-karta ' + (k.sparovana ? 'sparovana' : k.odkryta ? 'odkryta' : '') + '" id="pex_' + k.pos + '" onclick="klikPex(' + k.pos + ')">'
+      + (k.odkryta || k.sparovana ? (CACHE[k.imdb] ? '<img src="' + CACHE[k.imdb] + '">' : '🎬') : '🎬')
+      + '</div>';
+  });
+  html += '</div>';
+  if (hotovo) html += '<div class="mini-result"><div class="res-emoji">🎊</div><div class="res-title">Hotovo za ' + pexPokusy + ' pokusů!</div><button class="res-next" onclick="startPexeso()">Hrát znovu ›</button></div>';
+  document.getElementById('mini-body').innerHTML = html;
+  pexKarty.forEach(function(k) { if (!CACHE[k.imdb]) getPoster(k.imdb, function() {}); });
+}
+
+function klikPex(pos) {
+  if (pexCeka) return;
+  var k = pexKarty[pos];
+  if (k.odkryta || k.sparovana) return;
+  k.odkryta = true;
+  getPoster(k.imdb, function() {
+    renderPexeso();
+    pexOdkryte.push(pos);
+    if (pexOdkryte.length === 2) {
+      pexPokusy++;
+      pexCeka = true;
+      var ka = pexKarty[pexOdkryte[0]], kb = pexKarty[pexOdkryte[1]];
+      if (ka.id === kb.id) {
+        setTimeout(function() { ka.sparovana = kb.sparovana = true; pexSpar.push(ka.id); pexOdkryte = []; pexCeka = false; renderPexeso(); }, 600);
+      } else {
+        setTimeout(function() { ka.odkryta = kb.odkryta = false; pexOdkryte = []; pexCeka = false; renderPexeso(); }, 900);
+      }
+    }
+  });
+}
+
+// ═══ OMALOVÁNKY ═══
+function startOmalov() {
+  omalIdx = 0; omalStav = {}; omalB = OMAL_BARVY[0];
+  renderOmalov();
+}
+
+function renderOmalov() {
+  var p = OMAL_POSTAVY[omalIdx];
+  var vyb = Object.keys(omalStav).length, cel = p.seg.length;
+  var paths = '';
+  for (var i = 0; i < p.seg.length; i++) {
+    var s = p.seg[i], fill = omalStav[s.id] || '#fff9ee';
+    paths += '<g onclick="omalKlik(' + i + ')"><path d="' + s.d + '" fill="' + fill + '" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/></g>';
+  }
+  var svg = '<svg viewBox="0 0 ' + p.vw + ' ' + (p.vh + 52) + '" xmlns="http://www.w3.org/2000/svg">'
+    + '<rect width="' + p.vw + '" height="' + (p.vh + 52) + '" fill="#fff9ee"/>' + paths
+    + '<rect x="40" y="' + (p.vh + 4) + '" width="' + (p.vw - 80) + '" height="42" rx="14" fill="' + p.barva + '22" stroke="' + p.barva + '" stroke-width="2"/>'
+    + '<text x="' + (p.vw / 2) + '" y="' + (p.vh + 31) + '" text-anchor="middle" font-size="22" font-weight="bold" fill="' + p.barva + '" font-family="system-ui">' + p.emoji + ' ' + p.name.toUpperCase() + '</text>'
+    + '</svg>';
+  var html = '<div class="omal-paleta">';
+  for (var j = 0; j < OMAL_BARVY.length; j++) {
+    var b = OMAL_BARVY[j];
+    html += '<div class="omal-bv ' + (b === omalB ? 'on' : '') + '" style="background:' + b + '" onclick="omalVybrB(' + j + ')"></div>';
+  }
+  html += '</div><div class="omal-tabs">';
+  for (var k = 0; k < OMAL_POSTAVY.length; k++) {
+    var pp = OMAL_POSTAVY[k];
+    html += '<div class="omal-tab ' + (k === omalIdx ? 'on' : '') + '" onclick="omalVybrP(' + k + ')">' + pp.emoji + ' ' + pp.name + '</div>';
+  }
+  html += '</div><div class="omal-wrap">' + svg + '</div>';
+  html += '<div class="prog-bar"><div class="prog-fill" style="width:' + Math.round(vyb / cel * 100) + '%;background:' + p.barva + '"></div></div>';
+  html += '<div class="prog-text">Vybarveno: ' + vyb + ' / ' + cel + '</div>';
+  html += '<div class="omal-btns"><button class="omal-btn" onclick="omalReset()">🗑️ Vymazat</button><button class="omal-btn z" onclick="omalUlozit()">💾 Uložit</button></div>';
+  document.getElementById('mini-body').innerHTML = html;
+  window._omalP = p;
+}
+
+function omalKlik(idx) { var p = window._omalP; if (p && p.seg[idx]) omalStav[p.seg[idx].id] = omalB; renderOmalov(); }
+function omalVybrB(idx) { omalB = OMAL_BARVY[idx]; document.querySelectorAll('.omal-bv').forEach(function(x, i) { x.classList.toggle('on', i === idx); }); }
+function omalVybrP(idx) { omalIdx = idx; omalStav = {}; renderOmalov(); }
+function omalReset() { omalStav = {}; renderOmalov(); }
+function omalUlozit() {
+  var svg = document.querySelector('.omal-wrap svg');
+  if (!svg) return;
+  var blob = new Blob([svg.outerHTML], {type: 'image/svg+xml'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = OMAL_POSTAVY[omalIdx].name + '.svg'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══ INIT ═══
+refreshHS();
+renderHryGrid();
+
+(function() {
+  try {
+    var last = sessionStorage.getItem('fc_screen');
+    if (!last || last === 'home') return;
+    if (last === 'vybrat-kviz' || last === 'vybrat-hry') { showScreen(last); return; }
+    if (last === 'kviz-anim' || last === 'kviz-znalec' || last === 'vysledky') showScreen('vybrat-kviz');
+    else if (last === 'minihra') showScreen('vybrat-hry');
+  } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
