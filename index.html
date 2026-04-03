@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+
+<html lang="cs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>🎬 Filmáček</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0d0d1a;font-family:system-ui,-apple-system,sans-serif;color:#fff;min-height:100vh;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes slideUp{from{transform:translateY(22px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes slideR{from{transform:translateX(24px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes flip{0%{transform:rotateY(0)}100%{transform:rotateY(180deg)}}
+@keyframes flipBack{0%{transform:rotateY(180deg)}100%{transform:rotateY(0)}}
+
+/* ══════════════════════════════════════
+HOME
+══════════════════════════════════════ */
+#home{
+background:radial-gradient(ellipse at 50% -10%,#22104a 0%,#0d0d1a 65%);
+align-items:center;padding:0 24px;
+}
+.home-glow{position:fixed;top:-80px;left:50%;transform:translateX(-50%);width:320px;height:320px;
+background:radial-gradient(circle,rgba(140,80,255,.18),transparent 70%);pointer-events:none;}
+.home-emoji{font-size:70px;animation:float 3s ease-in-out infinite;
+filter:drop-shadow(0 0 30px rgba(160,100,255,.55));margin-bottom:14px;text-align:center;}
+.home-pretitle{font-size:10px;letter-spacing:7px;color:rgba(255,255,255,.28);text-align:center;margin-bottom:5px;}
+.home-title{font-size:40px;font-weight:900;text-align:center;
+background:linear-gradient(140deg,#fff 40%,rgba(190,150,255,.75));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.home-sub{font-size:13px;color:rgba(255,255,255,.35);text-align:center;margin-top:8px;margin-bottom:38px;}
+.home-cards{display:flex;flex-direction:column;gap:14px;width:100%;max-width:420px;}
+.hcard{border-radius:26px;cursor:pointer;transition:transform .2s,box-shadow .2s;
+overflow:hidden;position:relative;animation:slideUp .5s ease both;}
+.hcard:active{transform:scale(.97);}
+.hcard-body{padding:26px 24px;display:flex;align-items:center;gap:20px;}
+.hcard-icon{font-size:42px;flex-shrink:0;}
+.hcard-text{flex:1;}
+.hcard-name{font-size:22px;font-weight:900;margin-bottom:4px;}
+.hcard-desc{font-size:12px;opacity:.58;line-height:1.45;}
+.hcard-arrow{font-size:22px;opacity:.45;flex-shrink:0;}
+.home-footer{margin-top:auto;padding:22px 0;font-size:10px;color:rgba(255,255,255,.12);
+letter-spacing:2px;text-align:center;}
+
+/* ══════════════════════════════════════
+VÝBĚR OBTÍŽNOSTI
+══════════════════════════════════════ */
+#vybrat-obtiz{background:linear-gradient(160deg,#0d0d1a,#12101e);padding:0 22px;}
+.page-header{padding:52px 0 26px;display:flex;align-items:center;gap:14px;}
+.back-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);
+border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;
+display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.page-title{font-size:22px;font-weight:800;}
+.page-sub{font-size:13px;color:rgba(255,255,255,.35);margin-bottom:22px;}
+.diff-btn{display:flex;align-items:center;gap:16px;padding:20px 20px;
+border-radius:22px;border:1.5px solid;cursor:pointer;margin-bottom:13px;
+transition:transform .2s,box-shadow .2s;animation:slideUp .5s ease both;}
+.diff-btn:active{transform:scale(.97);}
+.diff-icon{width:58px;height:58px;border-radius:16px;
+display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;}
+.diff-info{flex:1;}
+.diff-name{font-size:20px;font-weight:800;margin-bottom:3px;}
+.diff-sub{font-size:12px;color:rgba(255,255,255,.4);}
+.diff-hs{text-align:right;flex-shrink:0;}
+.diff-hs-l{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1px;}
+.diff-hs-v{font-size:18px;font-weight:800;}
+
+/* ══════════════════════════════════════
+TOPBAR (KVÍZ)
+══════════════════════════════════════ */
+.topbar{display:flex;align-items:center;padding:50px 22px 14px;gap:12px;}
+.progress-bar{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s;}
+.score-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+
+/* ══════════════════════════════════════
+KVÍZ TEXTOVÝ
+══════════════════════════════════════ */
+#kviz-text{background:linear-gradient(160deg,#0d0d1a,#12101e);}
+.kviz-body{flex:1;padding:0 22px 28px;overflow-y:auto;animation:slideR .35s ease;}
+.poster-box{position:relative;margin-bottom:14px;border-radius:16px;overflow:hidden;
+height:174px;background:rgba(255,255,255,.05);
+display:flex;align-items:center;justify-content:center;}
+.poster-box img{width:100%;height:100%;object-fit:cover;}
+.poster-loading{font-size:30px;animation:pulse 1s infinite;}
+.trailer-napoveda{display:flex;align-items:center;gap:8px;padding:10px 16px;
+border-radius:14px;background:rgba(255,255,255,.07);
+border:1.5px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);
+font-size:13px;cursor:pointer;margin-bottom:12px;width:100%;}
+.trailer-napoveda:active{transform:scale(.98);}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;
+border-radius:20px;font-size:12px;font-weight:600;margin-bottom:10px;}
+.q-text{font-size:15px;color:rgba(255,255,255,.88);line-height:1.65;margin-bottom:10px;}
+.q-meta{display:flex;gap:8px;margin-bottom:18px;align-items:center;}
+.q-tag{font-size:10px;font-weight:700;color:#FF9F0A;padding:2px 8px;border-radius:6px;background:rgba(255,159,10,.15);}
+.q-rok{font-size:11px;color:rgba(255,255,255,.3);}
+.opt{display:flex;align-items:center;gap:12px;padding:13px 14px;
+border-radius:14px;border:1.5px solid rgba(255,255,255,.1);
+background:rgba(255,255,255,.06);cursor:pointer;width:100%;text-align:left;
+margin-bottom:9px;transition:all .25s;}
+.opt:active{transform:scale(.98);}
+.opt.ok{background:rgba(52,199,89,.2);border-color:rgba(52,199,89,.7);}
+.opt.err{background:rgba(255,59,48,.2);border-color:rgba(255,59,48,.7);}
+.opt.dim{opacity:.28;}
+.opt-letter{width:27px;height:27px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.opt-text{font-size:14px;font-weight:500;flex:1;}
+
+/* ══════════════════════════════════════
+KVÍZ OBRÁZKOVÝ
+══════════════════════════════════════ */
+#kviz-obr{background:linear-gradient(160deg,#0d0d1a,#12101e);}
+.obr-question{padding:10px 22px 12px;text-align:center;
+background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.07);}
+.obr-q-title{font-size:15px;font-weight:700;}
+.obr-q-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;}
+.obr-stars{text-align:center;padding:8px 22px;font-size:20px;}
+.obr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 24px;}
+.obr-tile{border-radius:14px;overflow:hidden;cursor:pointer;
+border:2.5px solid rgba(255,255,255,.08);transition:all .3s;
+aspect-ratio:2/3;background:#1a1a2e;position:relative;
+display:flex;align-items:center;justify-content:center;}
+.obr-tile img{width:100%;height:100%;object-fit:cover;}
+.obr-tile.ok{border-color:#34C759;}
+.obr-tile.err{border-color:#FF3B30;}
+.obr-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:44px;}
+.obr-overlay.ok{background:rgba(52,199,89,.32);}
+.obr-overlay.err{background:rgba(255,59,48,.32);}
+
+/* ══════════════════════════════════════
+HRY – VÝBĚR
+══════════════════════════════════════ */
+#vybrat-hry{background:linear-gradient(160deg,#0d0d1a,#15102a);padding:0 22px;}
+.hry-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-bottom:32px;}
+.hra-card{padding:22px 14px 18px;border-radius:20px;
+background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.09);
+cursor:pointer;text-align:center;transition:transform .2s,box-shadow .2s;
+animation:slideUp .4s ease both;}
+.hra-card:active{transform:scale(.95);}
+.hra-card-emoji{font-size:36px;margin-bottom:10px;}
+.hra-card-name{font-size:14px;font-weight:700;margin-bottom:4px;}
+.hra-card-desc{font-size:11px;color:rgba(255,255,255,.33);line-height:1.4;}
+.hra-card-hs{font-size:10px;margin-top:8px;font-weight:600;}
+
+/* ══════════════════════════════════════
+MINIHRA INFO
+══════════════════════════════════════ */
+#hra-info{background:linear-gradient(160deg,#0d0d1a,#15102a);
+align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
+.info-emoji{font-size:72px;animation:pop .5s ease;margin-bottom:18px;}
+.info-title{font-size:26px;font-weight:900;margin-bottom:10px;}
+.info-desc{font-size:15px;color:rgba(255,255,255,.5);line-height:1.65;margin-bottom:20px;}
+.info-rules{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+border-radius:18px;padding:18px 20px;margin-bottom:28px;text-align:left;width:100%;max-width:360px;}
+.info-rule{display:flex;align-items:flex-start;gap:10px;
+font-size:14px;color:rgba(255,255,255,.7);margin-bottom:10px;line-height:1.45;}
+.info-rule:last-child{margin-bottom:0;}
+.info-rule-i{font-size:16px;flex-shrink:0;}
+.btn-primary{padding:16px;border-radius:18px;border:none;
+font-size:17px;font-weight:800;color:#000;cursor:pointer;width:100%;max-width:360px;margin-bottom:12px;}
+.btn-ghost{padding:14px;border-radius:16px;background:rgba(255,255,255,.06);
+border:none;font-size:14px;color:rgba(255,255,255,.4);cursor:pointer;width:100%;max-width:360px;}
+
+/* ══════════════════════════════════════
+MINIHRA WRAPPER
+══════════════════════════════════════ */
+#minihra{background:linear-gradient(160deg,#0d0d1a,#15102a);}
+.mini-topbar{display:flex;align-items:center;justify-content:space-between;padding:50px 22px 18px;}
+.mini-topbar-l{display:flex;flex-direction:column;}
+.mini-topbar-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.3);font-weight:600;}
+.mini-topbar-name{font-size:20px;font-weight:800;color:#FFD60A;}
+.mini-exit{padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.07);
+border:none;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;}
+.mini-body{flex:1;padding:0 22px 28px;
+display:flex;flex-direction:column;align-items:center;gap:14px;overflow-y:auto;}
+.mini-poster{width:180px;height:252px;border-radius:16px;overflow:hidden;
+background:#1a1a2e;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mini-poster img{width:100%;height:100%;object-fit:cover;}
+.mini-lbl{font-size:13px;color:rgba(255,255,255,.5);text-align:center;}
+.mini-hint{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-top:2px;}
+.mini-opt{padding:13px 16px;border-radius:14px;
+background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);
+color:#fff;font-size:14px;font-weight:600;cursor:pointer;
+width:100%;text-align:left;margin-bottom:8px;transition:all .2s;}
+.mini-opt:active{transform:scale(.97);}
+.mini-result{text-align:center;animation:pop .4s ease;width:100%;padding:6px 0;}
+.res-emoji{font-size:52px;margin-bottom:12px;}
+.res-title{font-size:20px;font-weight:800;margin-bottom:6px;}
+.res-sub{font-size:14px;color:rgba(255,255,255,.45);margin-bottom:20px;}
+.res-next{padding:14px 40px;border-radius:16px;background:#FFD60A;
+border:none;font-size:16px;font-weight:700;color:#000;cursor:pointer;}
+
+/* ══════════════════════════════════════
+PEXESO
+══════════════════════════════════════ */
+.pex-stats{display:flex;gap:20px;justify-content:center;
+font-size:13px;color:rgba(255,255,255,.5);margin-bottom:4px;}
+.pex-stat-v{font-weight:700;color:#fff;}
+.pex-grid{display:grid;gap:8px;width:100%;}
+.pex-karta{border-radius:12px;overflow:hidden;cursor:pointer;
+aspect-ratio:2/3;background:linear-gradient(135deg,#1a1a2e,#16213e);
+border:2px solid rgba(255,255,255,.1);transition:transform .15s;
+position:relative;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.pex-karta:active{transform:scale(.95);}
+.pex-karta.odkryta{border-color:rgba(255,255,255,.3);}
+.pex-karta.sparovana{border-color:#34C759;opacity:.65;}
+.pex-karta img{width:100%;height:100%;object-fit:cover;}
+
+/* ══════════════════════════════════════
+OMALOVÁNKY
+══════════════════════════════════════ */
+.omal-canvas-wrap{width:100%;border-radius:16px;overflow:hidden;position:relative;}
+canvas{display:block;width:100%;touch-action:none;}
+.omal-barvy{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
+.omal-barva{width:38px;height:38px;border-radius:50%;cursor:pointer;
+border:3px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0;}
+.omal-barva.on{border-color:#fff;transform:scale(1.2);}
+.omal-btns{display:flex;gap:10px;width:100%;}
+.omal-btn{flex:1;padding:12px;border-radius:14px;border:none;
+font-size:13px;font-weight:700;cursor:pointer;}
+
+/* ══════════════════════════════════════
+PUZZLE
+══════════════════════════════════════ */
+.puzzle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;
+background:#111;border-radius:12px;overflow:hidden;width:270px;height:360px;flex-shrink:0;}
+.puzzle-d{overflow:hidden;cursor:pointer;border:2px solid transparent;
+transition:border .15s;border-radius:4px;}
+.puzzle-d.sel{border:2px solid #FFD60A;}
+.puzzle-moves{font-size:12px;color:rgba(255,255,255,.35);text-align:center;}
+
+/* ══════════════════════════════════════
+VÝSLEDKY KVÍZU
+══════════════════════════════════════ */
+#vysledky{background:linear-gradient(160deg,#0d0d1a,#12101e);
+align-items:center;justify-content:center;padding:40px 22px;}
+.vysl-wrap{width:100%;max-width:440px;}
+.vysl-emoji{font-size:72px;text-align:center;margin-bottom:14px;
+animation:pop .6s cubic-bezier(.34,1.56,.64,1);}
+.vysl-title{font-size:26px;font-weight:900;text-align:center;margin-bottom:6px;}
+.vysl-sub{font-size:14px;color:rgba(255,255,255,.4);text-align:center;}
+.vysl-new{margin-top:10px;font-size:13px;color:#FFD60A;font-weight:700;
+text-align:center;animation:pulse 1s infinite;}
+.stats-row{display:flex;width:100%;border-radius:20px;
+background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+overflow:hidden;margin:26px 0 12px;}
+.stat-col{flex:1;padding:16px 8px;text-align:center;
+border-right:1px solid rgba(255,255,255,.07);}
+.stat-col:last-child{border-right:none;}
+.stat-v{font-size:20px;font-weight:900;margin-bottom:3px;}
+.stat-l{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1px;}
+.rekord-row{width:100%;border-radius:14px;
+background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+padding:14px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}
+.rekord-l{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-bottom:2px;}
+.rekord-v{font-size:16px;font-weight:700;}
+
+/* ══════════════════════════════════════
+TRAILER MODAL
+══════════════════════════════════════ */
+#trailer-modal{display:none;position:fixed;inset:0;
+background:rgba(0,0,0,.92);z-index:999;
+align-items:center;justify-content:center;padding:20px;}
+#trailer-modal.on{display:flex;}
+.trailer-box{width:100%;max-width:560px;border-radius:20px;overflow:hidden;background:#000;}
+.trailer-ratio{position:relative;padding-bottom:56.25%;}
+.trailer-ratio iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
+.trailer-close{width:100%;padding:14px;background:rgba(255,255,255,.07);
+border:none;color:rgba(255,255,255,.45);font-size:14px;cursor:pointer;}
+</style>
+
+</head>
+<body>
+
+<!-- ══ HOME ══ -->
+
+<div id="home" class="screen active">
+  <div class="home-glow"></div>
+  <div style="padding-top:70px;width:100%;max-width:420px">
+    <div class="home-emoji">🎬</div>
+    <div class="home-title">Filmáček</div>
+    <div class="home-sub">Kvízy a hry o filmech</div>
+  </div>
+  <div class="home-cards">
+    <div class="hcard" style="background:linear-gradient(135deg,#1a2a4a,#0f1a30);animation-delay:.1s" onclick="showScreen('vybrat-obtiz')">
+      <div class="hcard-body">
+        <div class="hcard-icon">🎬</div>
+        <div class="hcard-text">
+          <div class="hcard-name">Kvíz</div>
+          <div class="hcard-desc">Otázky o filmech · 3 obtížnosti · Lehká, Střední, Těžká</div>
+        </div>
+        <div class="hcard-arrow">›</div>
+      </div>
+    </div>
+    <div class="hcard" style="background:linear-gradient(135deg,#2a1a4a,#1a0f35);animation-delay:.2s" onclick="showScreen('vybrat-hry')">
+      <div class="hcard-body">
+        <div class="hcard-icon">🎮</div>
+        <div class="hcard-text">
+          <div class="hcard-name">Hry</div>
+          <div class="hcard-desc">Puzzle · Pexeso · Omalovánky · Zoom · Silueta · Barvy</div>
+        </div>
+        <div class="hcard-arrow">›</div>
+      </div>
+    </div>
+  </div>
+  <div class="home-footer">by JiHl · Data: OMDb</div>
+</div>
+
+<!-- ══ VÝBĚR OBTÍŽNOSTI ══ -->
+
+<div id="vybrat-obtiz" class="screen">
+  <div style="padding:0 22px;flex:1">
+    <div class="page-header">
+      <button class="back-btn" onclick="showScreen('home')">←</button>
+      <div class="page-title">🎬 Kvíz</div>
+    </div>
+    <div class="page-sub">Vyber obtížnost</div>
+    <div id="diff-list"></div>
+  </div>
+</div>
+
+<!-- ══ KVÍZ TEXTOVÝ ══ -->
+
+<div id="kviz-text" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="potvrzeniZpet()">←</button>
+    <div class="progress-bar"><div id="kt-prog" class="progress-fill"></div></div>
+    <div class="score-wrap">
+      <span style="color:#FFD60A;font-size:13px">★</span>
+      <span id="kt-skore" style="font-size:15px;font-weight:700">0</span>
+      <span id="kt-serie" style="font-size:11px;color:#FF9F0A;margin-left:3px"></span>
+    </div>
+  </div>
+  <div class="kviz-body" id="kt-body"></div>
+</div>
+
+<!-- ══ KVÍZ OBRÁZKOVÝ ══ -->
+
+<div id="kviz-obr" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="potvrzeniZpet()">←</button>
+    <div class="progress-bar"><div id="ko-prog" class="progress-fill"></div></div>
+    <div id="ko-skore" style="font-size:15px;font-weight:700">0⭐</div>
+  </div>
+  <div id="ko-otazka" class="obr-question"></div>
+  <div class="obr-grid" id="ko-grid"></div>
+</div>
+
+<!-- ══ VÝBĚR HER ══ -->
+
+<div id="vybrat-hry" class="screen">
+  <div style="padding:0 22px;flex:1">
+    <div class="page-header">
+      <button class="back-btn" onclick="showScreen('home')">←</button>
+      <div class="page-title">🎮 Hry</div>
+    </div>
+    <div class="page-sub" style="margin-bottom:20px">Vyber si hru</div>
+    <div class="hry-grid" id="hry-grid"></div>
+  </div>
+</div>
+
+<!-- ══ HRA INFO ══ -->
+
+<div id="hra-info" class="screen">
+  <div id="info-emoji" class="info-emoji"></div>
+  <div id="info-title" class="info-title"></div>
+  <div id="info-desc" class="info-desc"></div>
+  <div id="info-rules" class="info-rules"></div>
+  <button id="info-start" class="btn-primary" onclick="spustitHru()">▶ Hrát!</button>
+  <button class="btn-ghost" onclick="showScreen('vybrat-hry')">← Zpět na výběr</button>
+</div>
+
+<!-- ══ MINIHRA ══ -->
+
+<div id="minihra" class="screen">
+  <div class="mini-topbar">
+    <div class="mini-topbar-l">
+      <div class="mini-topbar-label">HRA</div>
+      <div id="mini-name" class="mini-topbar-name"></div>
+    </div>
+    <button class="mini-exit" onclick="showScreen('vybrat-hry')">✕ Konec</button>
+  </div>
+  <div class="mini-body" id="mini-body"></div>
+</div>
+
+<!-- ══ VÝSLEDKY ══ -->
+
+<div id="vysledky" class="screen">
+  <div class="vysl-wrap">
+    <div id="v-emoji" class="vysl-emoji"></div>
+    <div id="v-title" class="vysl-title"></div>
+    <div id="v-sub" class="vysl-sub"></div>
+    <div id="v-new" class="vysl-new" style="display:none">🎊 Nový rekord!</div>
+    <div class="stats-row">
+      <div class="stat-col"><div id="v-spravne" class="stat-v"></div><div class="stat-l">SPRÁVNĚ</div></div>
+      <div class="stat-col"><div id="v-pct" class="stat-v" style="color:#FFD60A"></div><div class="stat-l">ÚSPĚŠNOST</div></div>
+      <div class="stat-col"><div id="v-serie" class="stat-v" style="color:#FF9F0A"></div><div class="stat-l">SÉRIE</div></div>
+    </div>
+    <div class="rekord-row">
+      <div><div class="rekord-l">🏅 REKORD</div><div id="v-rekord" class="rekord-v"></div></div>
+    </div>
+    <button id="v-znovu" class="btn-primary" onclick="znohu()">↺ Hrát znovu</button>
+    <button class="btn-ghost" style="margin-top:10px" onclick="showScreen('home')">🏠 Domů</button>
+  </div>
+</div>
+
+<!-- ══ TRAILER MODAL ══ -->
+
+<div id="trailer-modal">
+  <div class="trailer-box">
+    <div class="trailer-ratio"><iframe id="trailer-frame" allowfullscreen allow="autoplay;encrypted-media"></iframe></div>
+    <button class="trailer-close" onclick="zavritTrailer()">✕ Zavřít</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+const OMDB = "11f70c2b";
+const CACHE = {};
+
+const FILMY = {
+  lehka:[
+    {id:"d1",title:"Lví král",year:1994,imdb:"tt0110357",trailer:"4sj1MT05lAA",barvy:["#E8A820","#C4501A","#2E6B3E","#87CEEB"]},
+    {id:"d2",title:"Toy Story",year:1995,imdb:"tt0114709",trailer:"KYz2wyBy3kc",barvy:["#4A90D9","#F5C842","#E8543A","#2E8B57"]},
+    {id:"d3",title:"Jak vycvičit draka",year:2010,imdb:"tt0892769",trailer:"oKiYuIsPxYk",barvy:["#1C3A5E","#8B7355","#2D5016","#708090"]},
+    {id:"d4",title:"Ledové království",year:2013,imdb:"tt2294629",trailer:"TbQm5doF_Uc",barvy:["#87CEEB","#B0E0FF","#4682B4","#F0F8FF"]},
+    {id:"d5",title:"Hledá se Nemo",year:2003,imdb:"tt0266543",trailer:"2zBNm8FNxR8",barvy:["#006994","#FF6B35","#20B2AA","#FFD700"]},
+    {id:"d6",title:"Shrek",year:2001,imdb:"tt0126029",trailer:"W37DlG1i61s",barvy:["#7CB518","#8B4513","#DEB887","#4682B4"]},
+    {id:"d7",title:"Ratatouille",year:2007,imdb:"tt0382932",trailer:"NgsQ8mVkN8w",barvy:["#8B0000","#F5DEB3","#2E8B57","#C0C0C0"]},
+    {id:"d8",title:"Madagaskar",year:2005,imdb:"tt0351283",trailer:"M3kF3ZSOMRU",barvy:["#228B22","#FFA500","#000000","#87CEEB"]},
+    {id:"d9",title:"Úžasňákovi",year:2004,imdb:"tt0317705",trailer:"eZbzbC9285I",barvy:["#DC143C","#000080","#FFD700","#C0C0C0"]},
+    {id:"d10",title:"Kung Fu Panda",year:2008,imdb:"tt0441773",trailer:"bOQ4LIFsGo8",barvy:["#000000","#FFD700","#8B0000","#228B22"]},
+    {id:"d11",title:"Zpívej",year:2016,imdb:"tt3470600",trailer:"1c8bLZKfdTA",barvy:["#FF69B4","#4169E1","#FF8C00","#9370DB"]},
+    {id:"d12",title:"Moana",year:2016,imdb:"tt3521164",trailer:"LKFuXETZUsI",barvy:["#006994","#20B2AA","#F4A460","#FF6347"]},
+    {id:"d13",title:"Coco",year:2017,imdb:"tt2380307",trailer:"Rvr68u6CO9k",barvy:["#FF4500","#FF8C00","#9400D3","#FFD700"]},
+    {id:"d14",title:"Encanto",year:2021,imdb:"tt2953050",trailer:"CaimKeDcudo",barvy:["#FFD700","#FF69B4","#00CED1","#32CD32"]},
+    {id:"d15",title:"Minioni",year:2015,imdb:"tt2293640",trailer:"nhgNZ7JXPME",barvy:["#FFD700","#4169E1","#FF6347","#32CD32"]},
+  ],
+  stredni:[
+    {id:"m1",title:"Harry Potter a Kámen mudrců",year:2001,imdb:"tt0241527",trailer:"VyHV0BRtdxo",plot:"Jedenáctiletý Harry zjistí, že je čaroděj, a nastoupí na školu Bradavice.",hint:"Čarodějnická škola · koště · Ron a Hermiona",zanr:"Fantasy",barvy:["#7B2D8B","#C5A028","#8B0000","#1C3A5E"]},
+    {id:"m2",title:"Spider-Man: Paralelní světy",year:2018,imdb:"tt4633694",trailer:"g4Hbz2jLxvQ",plot:"Teenager Miles Morales se stane Spider-Manem z paralelního vesmíru.",hint:"Animovaný Spider-Man · Miles Morales · paralelní vesmíry",zanr:"Akční",barvy:["#DC143C","#000080","#FF0000","#1C1C1C"]},
+    {id:"m3",title:"Avengers: Endgame",year:2019,imdb:"tt4154796",trailer:"TcMBFSGVi1c",plot:"Zbývající hrdinové se spojí na poslední pokus zvrátit činy Thanose.",hint:"Marvel · cestování časem · prasknutí prstů",zanr:"Akční",barvy:["#C0C0C0","#FFD700","#DC143C","#000080"]},
+    {id:"m4",title:"Interstellar",year:2014,imdb:"tt0816692",trailer:"zSWdZVtXT7E",plot:"Astronauti cestují červí dírou hledat nový domov pro lidstvo.",hint:"Vesmír · červí díra · čas plyne jinak",zanr:"Sci-fi",barvy:["#000000","#FF8C00","#87CEEB","#C0C0C0"]},
+    {id:"m5",title:"Matrix",year:1999,imdb:"tt0133093",trailer:"vKQi3bBA1y8",plot:"Hacker Neo zjistí, že realita je iluze a lidstvo žije v simulaci.",hint:"Červená nebo modrá pilulka · zelený kód · Neo",zanr:"Sci-fi",barvy:["#006400","#000000","#C0C0C0","#1C3A5E"]},
+    {id:"m6",title:"Duna",year:2021,imdb:"tt1160419",trailer:"8g18jFHCLXk",plot:"Mladý Paul Atreides přijede na planetu Arrakis s cennými zásobami koření.",hint:"Poušť · obří červi · cenné koření",zanr:"Sci-fi",barvy:["#DAA520","#8B4513","#D2691E","#87CEEB"]},
+    {id:"m7",title:"Hunger Games",year:2012,imdb:"tt1392170",trailer:"mfmrOgDR6Q",plot:"Katniss se přihlásí místo sestry do smrtícího televizního turnaje.",hint:"Dystopie · šíp a luk · Capitol · tributi",zanr:"Akční",barvy:["#FFD700","#DC143C","#228B22","#1C1C1C"]},
+    {id:"m8",title:"Strážci galaxie",year:2014,imdb:"tt2015381",trailer:"d96cjJhvlMA",plot:"Banda vesmírných dobrodruhů se spojí, aby zachránila galaxii.",hint:"Marvel · mluvící mýval · Já jsem Groot",zanr:"Akční",barvy:["#DC143C","#FF8C00","#1C3A5E","#228B22"]},
+    {id:"m9",title:"Joker",year:2019,imdb:"tt7286456",trailer:"zAGVQLHvwOY",plot:"Neúspěšný komik postupně zkolabuje a promění se ve slavného záporáka.",hint:"Gotham · bílý make-up · schodiště",zanr:"Drama",barvy:["#800000","#9400D3","#FFD700","#1C1C1C"]},
+    {id:"m10",title:"Oppenheimer",year:2023,imdb:"tt15398776",trailer:"uYPbbksJxIg",plot:"Fyzik Oppenheimer vede vývoj první atomové bomby.",hint:"Atomová bomba · Manhattan Project · výbuch v poušti",zanr:"Drama",barvy:["#FF4500","#FF8C00","#1C1C1C","#C0C0C0"]},
+    {id:"m11",title:"Černý panter",year:2018,imdb:"tt1825683",trailer:"xjDjIWPAgrU",plot:"Nový král Wakandy musí ochránit zemi před rivalem.",hint:"Wakanda · vibranium · Afrika · Marvel",zanr:"Akční",barvy:["#800080","#C0C0C0","#FFD700","#1C1C1C"]},
+    {id:"m12",title:"Blade Runner 2049",year:2017,imdb:"tt1856101",trailer:"gCcx85zbxz4",plot:"Replikant-lovec odhalí tajemství, které by mohlo změnit společnost.",hint:"Replikanti · dystopické město · budoucnost",zanr:"Sci-fi",barvy:["#FF8C00","#696969","#1C3A5E","#8B0000"]},
+    {id:"m13",title:"Thor: Ragnarok",year:2017,imdb:"tt3501632",trailer:"ue80QwXMRHg",plot:"Thor musí přežít arénu a zachránit Asgard před bohyní Helou.",hint:"Marvel · aréna · Hulk · Hela",zanr:"Akční",barvy:["#FFD700","#DC143C","#1C3A5E","#C0C0C0"]},
+    {id:"m14",title:"Doctor Strange",year:2016,imdb:"tt1211837",trailer:"Lt-U_t2pUHI",plot:"Chirurg po nehodě objeví svět magie a stane se čarodějem.",hint:"Marvel · magie · zrcadlová dimenze",zanr:"Fantasy",barvy:["#FF8C00","#9400D3","#006994","#C0C0C0"]},
+    {id:"m15",title:"Labyrint",year:2014,imdb:"tt1790864",trailer:"AwwqPKqBnEA",plot:"Skupina teenagerů v bludišti se snaží najít cestu ven.",hint:"Bludiště · pohyblivé zdi · záhadná organizace",zanr:"Akční",barvy:["#696969","#8B4513","#228B22","#1C1C1C"]},
+  ],
+  tezka:[
+    {id:"a1",title:"Vykoupení z věznice Shawshank",year:1994,imdb:"tt0111161",trailer:"6hB3S9bIaco",plot:"Bankéř Andy je nespravedlivě odsouzen za vraždu a ve věznici si zachovává naději.",hint:"Věznice · útěk tunelem · přátelství · Andy Dufresne",zanr:"Drama",barvy:["#696969","#8B4513","#228B22","#87CEEB"]},
+    {id:"a2",title:"Forrest Gump",year:1994,imdb:"tt0109830",trailer:"bLvqoHBptjg",plot:"Muž s podprůměrným IQ zasahuje do klíčových momentů americké historie.",hint:"Lavička · bonboniéra · Run Forrest run",zanr:"Drama",barvy:["#87CEEB","#F5DEB3","#228B22","#DC143C"]},
+    {id:"a3",title:"Inception",year:2010,imdb:"tt1375666",trailer:"YoHD9XEInc0",plot:"Zloděj snů dostane nemožný úkol – vložit do mysli člověka myšlenku.",hint:"Sny ve snech · točící se káča · gravitace",zanr:"Sci-fi",barvy:["#1C3A5E","#C0C0C0","#8B4513","#87CEEB"]},
+    {id:"a4",title:"Pulp Fiction",year:1994,imdb:"tt0110912",trailer:"s7EdQ4FqbhY",plot:"Nesouvisející příběhy z losangeleského podsvětí se propletou.",hint:"Nelineární příběh · kufřík · tanec · Tarantino",zanr:"Krimi",barvy:["#8B0000","#1C1C1C","#FFD700","#C0C0C0"]},
+    {id:"a5",title:"Zelená míle",year:1999,imdb:"tt0120689",trailer:"Ki4haFcrCHs",plot:"Dozorce věznice se spřátelí s vězněm, který má záhadné léčivé schopnosti.",hint:"Smrt row · obří vězeň · myška Jingles",zanr:"Drama",barvy:["#006400","#696969","#8B4513","#87CEEB"]},
+    {id:"a6",title:"Klub rváčů",year:1999,imdb:"tt0137523",trailer:"_RDNqmRoMBs",plot:"Nespokojený zaměstnanec a mýdelný obchodník založí tajný klub rváčů.",hint:"Pravidlo č.1 · mýdlo · Tyler Durden · zvrat",zanr:"Drama",barvy:["#8B0000","#1C1C1C","#DC143C","#C0C0C0"]},
+    {id:"a7",title:"Parazit",year:2019,imdb:"tt6751668",trailer:"5xH0HfJHsaY",plot:"Chudá korejská rodina se infiltruje do bohaté rodiny jako zaměstnanci.",hint:"Korejský film · suterén · Oscar za nejlepší film",zanr:"Thriller",barvy:["#228B22","#1C1C1C","#F5DEB3","#4682B4"]},
+    {id:"a8",title:"Sedm",year:1995,imdb:"tt0114369",trailer:"znmZoVkCjpI",plot:"Dva detektivové pronásledují vraha inspirovaného sedmi smrtelnými hříchy.",hint:"Sedm hříchů · co je v krabici · Morgan Freeman",zanr:"Thriller",barvy:["#8B0000","#1C1C1C","#696969","#8B4513"]},
+    {id:"a9",title:"Mlčení jehňátek",year:1991,imdb:"tt0102926",trailer:"RyOCEFTjSaU",plot:"Agentka FBI musí využít pomoci kanibalského vraha k chytání jiného vraha.",hint:"Hannibal Lecter · agentka Clarice · FBI",zanr:"Thriller",barvy:["#696969","#8B0000","#1C1C1C","#C0C0C0"]},
+    {id:"a10",title:"Schindlerův seznam",year:1993,imdb:"tt0108052",trailer:"gG22XNhtnoY",plot:"Podnikatel Schindler zachrání tisíc Židů před holocaustem.",hint:"Černobílý · holčička v červeném · holocaust",zanr:"Drama",barvy:["#696969","#1C1C1C","#DC143C","#C0C0C0"]},
+    {id:"a11",title:"Kmotr",year:1972,imdb:"tt0068646",trailer:"sY1S34973zA",plot:"Hlava mafiánské rodiny předá vládu nejmladšímu synovi Michaelovi.",hint:"Mafie · nabídka co nejde odmítnout · kůň v posteli",zanr:"Krimi",barvy:["#8B0000","#1C1C1C","#C0C0C0","#8B4513"]},
+    {id:"a12",title:"Goodfellas",year:1990,imdb:"tt0099685",trailer:"qo5jnBJDwW0",plot:"Skutečný příběh Henryho Hilla, který vyrůstal v prostředí newyorské mafie.",hint:"Mafie · skutečný příběh · New York",zanr:"Krimi",barvy:["#8B0000","#1C1C1C","#FFD700","#696969"]},
+    {id:"a13",title:"Requiem za sen",year:2000,imdb:"tt0180093",trailer:"1SjfZXFBGKA",plot:"Čtyři lidé propadají závislostem a ztrácejí kontrolu nad svým životem.",hint:"Závislost · chladnička · televize · Aronofsky",zanr:"Drama",barvy:["#8B0000","#1C1C1C","#FF8C00","#C0C0C0"]},
+    {id:"a14",title:"Americká krása",year:1999,imdb:"tt0169547",trailer:"t4RoYXT7doU",plot:"Muž v krizi identity se zamiluje do kamarádky své dcery.",hint:"Červené plátky růží · plastikový sáček · předměstí",zanr:"Drama",barvy:["#DC143C","#228B22","#F5DEB3","#87CEEB"]},
+    {id:"a15",title:"Mulholland Drive",year:2001,imdb:"tt0166924",trailer:"LK8cEoeMbFw",plot:"Herečka pomáhá ženě s amnézií odhalit totožnost v záhadném LA.",hint:"David Lynch · sen nebo realita · modrá krabička",zanr:"Thriller",barvy:["#000080","#DC143C","#1C1C1C","#C0C0C0"]},
+  ]
+};
+
+const KATEGORIE = [
+  {id:"lehka",label:"Lehká",sub:"Animované filmy · Pro děti",emoji:"🧒",barva:"#FFB830",bg:"rgba(255,184,48,.12)",border:"rgba(255,184,48,.35)",mod:"obrazky"},
+  {id:"stredni",label:"Střední",sub:"Dobrodružné a fantasy filmy",emoji:"🎧",barva:"#3DD68C",bg:"rgba(61,214,140,.12)",border:"rgba(61,214,140,.35)",mod:"text",trailer:true},
+  {id:"tezka",label:"Těžká",sub:"Klasické a artové filmy",emoji:"🎬",barva:"#E8445A",bg:"rgba(232,68,90,.12)",border:"rgba(232,68,90,.35)",mod:"text",trailer:false},
+];
+
+const HRY_DEF = [
+  {id:"zoom",emoji:"🔍",name:"Zoom In",desc:"Plakát se postupně zostřuje. Uhádni film co nejdříve!",barva:"#64B5F6",
+   rules:["Plakát je rozmazaný a postupně se zostřuje","Čím dříve uhodneš, tím více bodů dostaneš","Vyber správný film ze 4 možností"]},
+  {id:"silueta",emoji:"🎭",name:"Silueta",desc:"Plakát je celý černý. Uhádni film!",barva:"#BA68C8",
+   rules:["Plakát je skrytý jako silueta","Klepnutím ho můžeš trochu odhalit","Vyber správný film ze 4 možností"]},
+  {id:"barvy",emoji:"🎨",name:"Barvy",desc:"Uvidíš jen barevnou paletu plakátu.",barva:"#FF8A65",
+   rules:["Zobrazí se jen 4 barvy z plakátu","Žádný obrázek, jen barvy","Vyber správný film ze 4 možností"]},
+  {id:"puzzle",emoji:"🧩",name:"Puzzle",desc:"Plakát je rozstřižen na 9 dílků. Složi ho!",barva:"#4DB6AC",
+   rules:["Klepni na dva dílky a prohoď je","Cíl je složit plakát do správné podoby","Méně tahů = více bodů"]},
+  {id:"pexeso",emoji:"🃏",name:"Pexeso",desc:"Otočené plakáty filmů. Najdi dvojice!",barva:"#F06292",
+   rules:["Klepni na kartu a otočí se plakát","Najdi dvě stejné karty","Méně pokusů = lepší skóre"]},
+  {id:"omalov",emoji:"🖍️",name:"Omalovánky",desc:"Vybarvi plakát svými barvami!",barva:"#AED581",
+   rules:["Vyber barvu ze palety","Klepni na část plakátu a vybarvi ji","Vytvoř si vlastní verzi plakátu"]},
+];
+
+// ══════════════════════════════════════
+// STAV
+// ══════════════════════════════════════
+let aktKat=null, otazky=[], otIdx=0, skore=0, serie=0, nejSerie=0, napouzita=false;
+let aktHra=null, aktHraFilmy=[];
+let pexKarty=[], pexOdkryte=[], pexSparovane=[], pexPokusy=0, pexCeka=false;
+let puzzleDilky=[], puzzleSel=null, puzzleTahy=0, puzzleSrc=null, puzzleFilm=null;
+let zoomKrok=0, zoomTimer=null, zoomFilm=null, zoomMoz=[];
+let omalCtx=null, omalBarva="#FF4444", omalCanvas=null;
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+function mix(arr){return[...arr].sort(()=>Math.random()-.5);}
+function getHS(k){try{return parseInt(localStorage.getItem("hs2_"+k)||"0");}catch{return 0;}}
+function setHS(k,n){try{localStorage.setItem("hs2_"+k,n);}catch{}}
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+
+async function getPoster(imdb){
+  if(CACHE[imdb]) return CACHE[imdb];
+  try{
+    const r=await fetch(`https://www.omdbapi.com/?i=${imdb}&apikey=${OMDB}`);
+    const d=await r.json();
+    if(d.Poster&&d.Poster!=="N/A"){CACHE[imdb]=d.Poster;return d.Poster;}
+  }catch{}
+  return null;
+}
+
+function potvrzeniZpet(){
+  if(confirm("Ukončit kvíz?")) showScreen("vybrat-obtiz");
+}
+
+// ══════════════════════════════════════
+// RENDER ÚVOD
+// ══════════════════════════════════════
+function renderDiffList(){
+  document.getElementById("diff-list").innerHTML = KATEGORIE.map((k,i)=>{
+    const hs=getHS(k.id);
+    return `<div class="diff-btn" style="background:${k.bg};border-color:${k.border};animation-delay:${.1+i*.1}s" onclick="spustitKviz('${k.id}')">
+      <div class="diff-icon" style="background:${k.barva}20">${k.emoji}</div>
+      <div class="diff-info">
+        <div class="diff-name">${k.label}</div>
+        <div class="diff-sub">${k.sub}</div>
+      </div>
+      ${hs>0?`<div class="diff-hs"><div class="diff-hs-l">REKORD</div><div class="diff-hs-v" style="color:${k.barva}">${hs}/10</div></div>`:""}
+      <div style="color:${k.barva};font-size:20px;opacity:.6">›</div>
+    </div>`;
+  }).join("");
+}
+
+function renderHryGrid(){
+  document.getElementById("hry-grid").innerHTML = HRY_DEF.map((h,i)=>{
+    const hs=getHS("hra_"+h.id);
+    return `<div class="hra-card" style="animation-delay:${i*.07}s;--c:${h.barva}" onclick="otevritHraInfo('${h.id}')"
+      onmouseenter="this.style.borderColor='${h.barva}50';this.style.boxShadow='0 8px 24px ${h.barva}20'"
+      onmouseleave="this.style.borderColor='';this.style.boxShadow=''">
+      <div class="hra-card-emoji">${h.emoji}</div>
+      <div class="hra-card-name">${h.name}</div>
+      <div class="hra-card-desc">${h.desc}</div>
+      ${hs>0?`<div class="hra-card-hs" style="color:${h.barva}">Rekord: ${hs}</div>`:""}
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════
+// KVÍZ
+// ══════════════════════════════════════
+function spustitKviz(katId){
+  aktKat=KATEGORIE.find(k=>k.id===katId);
+  const filmy=FILMY[katId];
+  const vybrane=mix(filmy).slice(0,10);
+  otazky=vybrane.map((f,i)=>{
+    const spatne=mix(filmy.filter(x=>x.id!==f.id)).slice(0,3);
+    const moz=mix([f,...spatne]);
+    const jeHint=i%2===1&&katId!=="lehka";
+    return{film:f,moz,spravne:f.id,jeHint};
+  });
+  otIdx=0;skore=0;serie=0;nejSerie=0;napouzita=false;
+  if(aktKat.mod==="obrazky") startObrKviz();
+  else startTextKviz();
+}
+
+// — TEXTOVÝ —
+function startTextKviz(){
+  showScreen("kviz-text");
+  renderTextQ();
+}
+
+async function renderTextQ(){
+  const q=otazky[otIdx];
+  const pct=(otIdx/otazky.length)*100;
+  const prog=document.getElementById("kt-prog");
+  prog.style.width=pct+"%";prog.style.background=aktKat.barva;
+  document.getElementById("kt-skore").textContent=skore;
+  document.getElementById("kt-serie").textContent=serie>=2?"🔥"+serie:"";
+  const src=await getPoster(q.film.imdb);
+  const pismena=["A","B","C","D"];
+  const jeStredni=aktKat.id==="stredni";
+
+  document.getElementById("kt-body").innerHTML=`
+    <div class="poster-box">
+      ${src?`<img src="${src}">`:`<div class="poster-loading">⏳</div>`}
+    </div>
+    ${jeStredni?`<button class="trailer-napoveda" onclick="otevritTrailer('${q.film.trailer}',true)">
+      💡 Nápověda – pusť trailer ${!napouzita?'<span style="color:#FF9F0A;font-size:10px">(-1 bod)</span>':''}
+    </button>`:""}
+    <div class="badge" style="background:${aktKat.barva}18;border:1px solid ${aktKat.barva}30;color:${aktKat.barva}">
+      ${q.jeHint?"💡 Nápověda – uhádni film":"🎞️ Který film popisuje děj?"}
+    </div>
+    <div class="q-text">${q.jeHint?q.film.hint:q.film.plot}</div>
+    <div class="q-meta">
+      <span class="q-tag">OMDb</span>
+      <span class="q-rok">${q.film.year}${q.film.zanr?" · "+q.film.zanr:""}</span>
+    </div>
+    <div style="padding-bottom:28px">
+      ${q.moz.map((m,i)=>`
+        <button class="opt" id="o_${m.id}" onclick="vybrTextQ('${m.id}')">
+          <div class="opt-letter" style="background:${aktKat.barva}20;color:${aktKat.barva}">${pismena[i]}</div>
+          <span class="opt-text">${m.title}</span>
+        </button>`).join("")}
+    </div>`;
+}
+
+function vybrTextQ(mozId){
+  const q=otazky[otIdx];
+  const btn=document.getElementById("o_"+q.spravne);
+  if(!btn||btn.disabled) return;
+  const ok=mozId===q.spravne;
+  const body=ok?(napouzita?0:1):0;
+  skore+=body;
+  document.getElementById("kt-skore").textContent=skore;
+  if(ok){serie++;if(serie>nejSerie)nejSerie=serie;}else serie=0;
+  document.getElementById("kt-serie").textContent=serie>=2?"🔥"+serie:"";
+  q.moz.forEach(m=>{
+    const b=document.getElementById("o_"+m.id);
+    if(!b)return;b.disabled=true;
+    if(m.id===q.spravne)b.classList.add("ok");
+    else if(m.id===mozId)b.classList.add("err");
+    else b.classList.add("dim");
+  });
+  setTimeout(()=>{
+    if(otIdx+1>=otazky.length) zobrazVysledky();
+    else{otIdx++;napouzita=false;renderTextQ();}
+  },1700);
+}
+
+// — OBRÁZKOVÝ —
+function startObrKviz(){
+  showScreen("kviz-obr");
+  renderObrQ();
+}
+
+async function renderObrQ(){
+  const q=otazky[otIdx];
+  const pct=(otIdx/otazky.length)*100;
+  const prog=document.getElementById("ko-prog");
+  prog.style.width=pct+"%";prog.style.background=aktKat.barva;
+  document.getElementById("ko-skore").textContent=skore+"⭐";
+
+  // Otázka – jasný text co mají dělat
+  document.getElementById("ko-otazka").innerHTML=`
+    <div class="obr-q-title">🤔 Který plakát patří k tomuto číslu?</div>
+    <div class="obr-q-sub">Otázka ${otIdx+1} z ${otazky.length} · Klepni na správný plakát</div>`;
+
+  const grid=document.getElementById("ko-grid");
+  grid.innerHTML=q.moz.map(m=>`
+    <div class="obr-tile" id="t_${m.id}" onclick="vybrObrQ('${m.id}')">
+      <div style="font-size:24px;animation:pulse 1s infinite">⏳</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">${m.title}</div>
+    </div>`).join("");
+
+  for(const m of q.moz){
+    const src=await getPoster(m.imdb);
+    const tile=document.getElementById("t_"+m.id);
+    if(tile&&src) tile.innerHTML=`<img src="${src}"><div style="position:absolute;bottom:0;left:0;right:0;padding:6px 4px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:10px;font-weight:600;text-align:center">${m.title}</div>`;
+  }
+}
+
+function vybrObrQ(mozId){
+  const q=otazky[otIdx];
+  const tiles=document.querySelectorAll(".obr-tile");
+  if([...tiles].some(t=>t.dataset.done)) return;
+  tiles.forEach(t=>t.dataset.done="1");
+  const ok=mozId===q.spravne;
+  if(ok) skore++;
+  document.getElementById("ko-skore").textContent=skore+"⭐";
+  q.moz.forEach(m=>{
+    const tile=document.getElementById("t_"+m.id);
+    if(!tile)return;
+    if(m.id===q.spravne){tile.classList.add("ok");tile.innerHTML+=`<div class="obr-overlay ok">✓</div>`;}
+    else if(m.id===mozId){tile.classList.add("err");tile.innerHTML+=`<div class="obr-overlay err">✗</div>`;}
+  });
+  setTimeout(()=>{
+    if(otIdx+1>=otazky.length) zobrazVysledky();
+    else{otIdx++;renderObrQ();}
+  },1500);
+}
+
+// ══════════════════════════════════════
+// VÝSLEDKY
+// ══════════════════════════════════════
+function zobrazVysledky(){
+  const pct=skore/otazky.length;
+  const prev=getHS(aktKat.id);
+  const jeNovy=skore>prev;
+  if(jeNovy)setHS(aktKat.id,skore);
+  const{emoji,titul,sub}=pct>=.9?{emoji:"🏆",titul:"Filmový expert!",sub:"Fantastický výsledek!"}
+    :pct>=.7?{emoji:"🎉",titul:"Skvělý výsledek!",sub:"Filmy ti nejsou cizí"}
+    :pct>=.5?{emoji:"👍",titul:"Dobrý pokus!",sub:"Ještě trochu procvičit"}
+    :{emoji:"🎬",titul:"Trénuj dál!",sub:"Filmy jsou krásné!"};
+  document.getElementById("v-emoji").textContent=emoji;
+  document.getElementById("v-title").textContent=titul;
+  document.getElementById("v-sub").textContent=sub;
+  document.getElementById("v-new").style.display=jeNovy?"block":"none";
+  document.getElementById("v-spravne").textContent=skore+"/"+otazky.length;
+  document.getElementById("v-spravne").style.color=aktKat.barva;
+  document.getElementById("v-pct").textContent=Math.round(pct*100)+"%";
+  document.getElementById("v-serie").textContent=nejSerie;
+  document.getElementById("v-rekord").textContent=Math.max(skore,prev)+"/10";
+  document.getElementById("v-rekord").style.color=aktKat.barva;
+  document.getElementById("v-znovu").style.background=aktKat.barva;
+  showScreen("vysledky");
+}
+
+function znohu(){spustitKviz(aktKat.id);}
+
+// ══════════════════════════════════════
+// TRAILER
+// ══════════════════════════════════════
+function otevritTrailer(vid,jeNap){
+  if(jeNap)napouzita=true;
+  document.getElementById("trailer-frame").src=`https://www.youtube.com/embed/${vid}?autoplay=1`;
+  document.getElementById("trailer-modal").classList.add("on");
+}
+function zavritTrailer(){
+  document.getElementById("trailer-frame").src="";
+  document.getElementById("trailer-modal").classList.remove("on");
+}
+
+// ══════════════════════════════════════
+// HRY – INFO
+// ══════════════════════════════════════
+function otevritHraInfo(hraId){
+  aktHra=HRY_DEF.find(h=>h.id===hraId);
+  // Pro hry použijeme všechny filmy dohromady
+  aktHraFilmy=mix([...FILMY.lehka,...FILMY.stredni,...FILMY.tezka]);
+  document.getElementById("info-emoji").textContent=aktHra.emoji;
+  document.getElementById("info-title").textContent=aktHra.name;
+  document.getElementById("info-desc").textContent=aktHra.desc;
+  document.getElementById("info-rules").innerHTML=aktHra.rules.map(r=>`
+    <div class="info-rule"><div class="info-rule-i">▸</div><div>${r}</div></div>`).join("");
+  const btn=document.getElementById("info-start");
+  btn.style.background=aktHra.barva;
+  showScreen("hra-info");
+}
+
+function spustitHru(){
+  document.getElementById("mini-name").textContent=aktHra.emoji+" "+aktHra.name;
+  showScreen("minihra");
+  if(aktHra.id==="zoom") startZoom();
+  else if(aktHra.id==="silueta") startSilueta();
+  else if(aktHra.id==="barvy") startBarvy();
+  else if(aktHra.id==="puzzle") startPuzzle();
+  else if(aktHra.id==="pexeso") startPexeso();
+  else if(aktHra.id==="omalov") startOmalov();
+}
+
+function preskocitMinihru(){showScreen("vybrat-hry");}
+
+// ══════════════════════════════════════
+// HRA: ZOOM IN
+// ══════════════════════════════════════
+function startZoom(){
+  if(zoomTimer)clearInterval(zoomTimer);
+  zoomFilm=mix(aktHraFilmy)[0];
+  zoomMoz=mix([zoomFilm,...mix(aktHraFilmy.filter(f=>f.id!==zoomFilm.id)).slice(0,3)]);
+  zoomKrok=0;
+  renderZoom();
+  zoomTimer=setInterval(()=>{
+    if(zoomKrok>=4){clearInterval(zoomTimer);return;}
+    zoomKrok++;renderZoom();
+  },2200);
+}
+
+async function renderZoom(vybrano=null){
+  const src=await getPoster(zoomFilm.imdb);
+  const blur=vybrano?0:[22,14,7,2,0][Math.min(zoomKrok,4)];
+  const body=vybrano===zoomFilm.id?Math.max(0,4-zoomKrok):0;
+  document.getElementById("mini-body").innerHTML=`
+    <div class="mini-lbl">🔍 Zoom In</div>
+    <div class="mini-hint">Uhádni film co nejdříve</div>
+    <div class="mini-poster" style="position:relative">
+      ${src?`<img src="${src}" style="filter:blur(${blur}px);transition:filter 1.2s;transform:scale(1.12)">`:`<span style="font-size:30px;animation:pulse 1s infinite">⏳</span>`}
+      ${!vybrano?`<div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px">
+        ${[0,1,2,3,4].map(i=>`<div style="width:6px;height:6px;border-radius:50%;background:${i<=zoomKrok?"#fff":"rgba(255,255,255,.2)"}"></div>`).join("")}
+      </div>`:""}
+    </div>
+    ${!vybrano
+      ?zoomMoz.map(m=>`<button class="mini-opt" onclick="vybrZoom('${m.id}')">${m.title}</button>`).join("")
+      :`<div class="mini-result">
+          <div class="res-emoji">${vybrano===zoomFilm.id?"🎯":"😅"}</div>
+          <div class="res-title">${vybrano===zoomFilm.id?"+"+body+" bodů!":"Špatně"}</div>
+          ${vybrano!==zoomFilm.id?`<div class="res-sub">Správně: ${zoomFilm.title}</div>`:""}
+          <button class="res-next" onclick="startZoom()">Další film ›</button>
+        </div>`}`;
+}
+
+function vybrZoom(mozId){
+  clearInterval(zoomTimer);
+  renderZoom(mozId);
+  const body=mozId===zoomFilm.id?Math.max(0,4-zoomKrok):0;
+  if(body>0){const hs=getHS("hra_zoom");if(body>hs)setHS("hra_zoom",body);}
+}
+
+// ══════════════════════════════════════
+// HRA: SILUETA
+// ══════════════════════════════════════
+function startSilueta(){
+  const film=mix(aktHraFilmy)[0];
+  const moz=mix([film,...mix(aktHraFilmy.filter(f=>f.id!==film.id)).slice(0,3)]);
+  renderSilueta(film,moz,null,false);
+}
+
+async function renderSilueta(film,moz,vybrano,odhalena){
+  const src=await getPoster(film.imdb);
+  const body=vybrano===film.id?3:0;
+  document.getElementById("mini-body").innerHTML=`
+    <div class="mini-lbl">🎭 Silueta</div>
+    <div class="mini-hint">Uhádni film podle siluety plakátu</div>
+    <div class="mini-poster" style="position:relative;cursor:${!vybrano?"pointer":"default"}"
+      onclick="${!vybrano?"odhalitSilImg(this)":""}">
+      ${src?`<img src="${src}" style="filter:${vybrano||odhalena?"brightness(.35)":"brightness(0)"};transition:filter .6s" id="sil-img">`:`<span style="font-size:28px">🎬</span>`}
+      ${!vybrano&&!odhalena?`<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:11px;color:rgba(255,255,255,.4)"><span style="font-size:24px">👆</span>Klepni pro nápovědu</div>`:""}
+    </div>
+    ${!vybrano
+      ?moz.map(m=>`<button class="mini-opt" onclick="vybrSilueta('${m.id}','${film.id}',${JSON.stringify(moz).replace(/"/g,"'")})">${m.title}</button>`).join("")
+      :`<div class="mini-result">
+          <div class="res-emoji">${vybrano===film.id?"🎯":"😅"}</div>
+          <div class="res-title">${vybrano===film.id?"+3 body!":"Špatně"}</div>
+          ${vybrano!==film.id?`<div class="res-sub">Správně: ${film.title}</div>`:""}
+          <button class="res-next" onclick="startSilueta()">Další film ›</button>
+        </div>`}`;
+}
+
+function odhalitSilImg(el){
+  const img=document.getElementById("sil-img");
+  if(img) img.style.filter="brightness(.35)";
+}
+
+function vybrSilueta(mozId,filmId,mozStr){
+  const film=aktHraFilmy.find(f=>f.id===filmId);
+  const moz=aktHraFilmy.filter(f=>[filmId,...JSON.parse(mozStr.replace(/'/g,'"'))].includes(f.id));
+  renderSilueta(film,moz,mozId,true);
+}
+
+// ══════════════════════════════════════
+// HRA: BARVY
+// ══════════════════════════════════════
+function startBarvy(){
+  const film=mix(aktHraFilmy.filter(f=>f.barvy))[0];
+  const moz=mix([film,...mix(aktHraFilmy.filter(f=>f.id!==film.id&&f.barvy)).slice(0,3)]);
+  renderBarvy(film,moz,null);
+}
+
+async function renderBarvy(film,moz,vybrano){
+  const body=vybrano===film.id?3:0;
+  const src=vybrano?await getPoster(film.imdb):null;
+  document.getElementById("mini-body").innerHTML=`
+    <div class="mini-lbl">🎨 Barvy plakátu</div>
+    <div class="mini-hint">Který film má tyto barvy?</div>
+    <div style="display:flex;gap:8px;padding:18px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)">
+      ${film.barvy.map(b=>`<div style="flex:1;height:68px;border-radius:10px;background:${b};box-shadow:0 4px 14px ${b}50"></div>`).join("")}
+    </div>
+    ${!vybrano
+      ?moz.map(m=>`<button class="mini-opt" onclick="vybrBarvy('${m.id}','${film.id}')">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="display:flex;gap:3px">${m.barvy?m.barvy.slice(0,3).map(b=>`<div style="width:14px;height:14px;border-radius:3px;background:${b}"></div>`).join(""):""}</div>
+            <span>${m.title}</span>
+          </div>
+        </button>`).join("")
+      :`<div class="mini-poster">${src?`<img src="${src}">`:`<span style="font-size:28px">🎬</span>`}</div>
+        <div class="mini-result">
+          <div class="res-emoji">${vybrano===film.id?"🎨":"😅"}</div>
+          <div class="res-title">${vybrano===film.id?"+3 body!":"Špatně"}</div>
+          ${vybrano!==film.id?`<div class="res-sub">Správně: ${film.title}</div>`:""}
+          <button class="res-next" onclick="startBarvy()">Další film ›</button>
+        </div>`}`;
+}
+
+function vybrBarvy(mozId,filmId){
+  const film=aktHraFilmy.find(f=>f.id===filmId);
+  const moz=mix([film,...mix(aktHraFilmy.filter(f=>f.id!==filmId&&f.barvy)).slice(0,3)]);
+  renderBarvy(film,moz,mozId);
+}
+
+// ══════════════════════════════════════
+// HRA: PUZZLE
+// ══════════════════════════════════════
+function startPuzzle(){
+  puzzleFilm=mix(aktHraFilmy)[0];
+  puzzleDilky=mix([0,1,2,3,4,5,6,7,8]);
+  puzzleSel=null;puzzleTahy=0;
+  getPoster(puzzleFilm.imdb).then(s=>{puzzleSrc=s;renderPuzzle();});
+}
+
+function renderPuzzle(){
+  const vyreseno=puzzleDilky.every((v,i)=>v===i);
+  document.getElementById("mini-body").innerHTML=`
+    <div class="mini-lbl">🧩 Puzzle – ${puzzleFilm.title}</div>
+    <div class="puzzle-moves">${puzzleTahy} tahů ${vyreseno?"· ✓ Složeno!":""}</div>
+    ${!vyreseno?`<div class="puzzle-grid">
+      ${puzzleDilky.map((d,p)=>{
+        const col=d%3,row=Math.floor(d/3);
+        const style=puzzleSrc
+          ?`background-image:url(${puzzleSrc});background-size:300% 300%;background-position:${col*50}% ${row*50}%`
+          :`background:#2a2a3e`;
+        return `<div class="puzzle-d ${puzzleSel===p?"sel":""}" style="${style}" onclick="klikPuzzle(${p})"></div>`;
+      }).join("")}
+    </div>
+    <button class="mini-opt" style="text-align:center;color:rgba(255,255,255,.4)" onclick="startPuzzle()">🔀 Nový film</button>`
+    :`<div class="mini-result">
+        <div class="res-emoji">🏆</div>
+        <div class="res-title">Složeno za ${puzzleTahy} tahů!</div>
+        <div class="res-sub">${puzzleTahy<=15?"Skvěle! Skoro dokonalé":puzzleTahy<=25?"Dobře!":"Příště méně tahů 😄"}</div>
+        <button class="res-next" onclick="startPuzzle()">Nový film ›</button>
+      </div>`}`;
+}
+
+function klikPuzzle(pos){
+  if(puzzleSel===null){puzzleSel=pos;}
+  else{
+    const n=[...puzzleDilky];
+    [n[puzzleSel],n[pos]]=[n[pos],n[puzzleSel]];
+    puzzleDilky=n;puzzleTahy++;puzzleSel=null;
+  }
+  renderPuzzle();
+}
+
+// ══════════════════════════════════════
+// HRA: PEXESO
+// ══════════════════════════════════════
+function startPexeso(){
+  const vybrane=mix(aktHraFilmy).slice(0,6);
+  const dvojice=mix([...vybrane,...vybrane].map((f,i)=>({...f,uid:f.id+"_"+Math.floor(i/2<6?"A":"B")})));
+  pexKarty=dvojice.map((f,i)=>({...f,pos:i,odkryta:false,sparovana:false}));
+  pexOdkryte=[];pexSparovane=[];pexPokusy=0;pexCeka=false;
+  renderPexeso();
+}
+
+async function renderPexeso(){
+  const hotovo=pexSparovane.length===pexKarty.length/2;
+  document.getElementById("mini-body").innerHTML=`
+    <div class="mini-lbl">🃏 Pexeso</div>
+    <div style="display:flex;gap:20px;justify-content:center;font-size:13px;color:rgba(255,255,255,.5);margin-bottom:4px">
+      <span>Pokusy: <b style="color:#fff">${pexPokusy}</b></span>
+      <span>Nalezeno: <b style="color:#34C759">${pexSparovane.length}/${pexKarty.length/2}</b></span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%">
+      ${pexKarty.map(k=>`
+        <div class="pex-karta ${k.sparovana?"sparovana":k.odkryta?"odkryta":""}"
+          id="pex_${k.pos}" onclick="klikPex(${k.pos})">
+          ${k.odkryta||k.sparovana?`<img src="${CACHE[k.imdb]||""}" onerror="this.style.display='none'" style="width:100%;height:100%;object-fit:cover">`:"🎬"}
+        </div>`).join("")}
+    </div>
+    ${hotovo?`<div class="mini-result">
+      <div class="res-emoji">🎊</div>
+      <div class="res-title">Hotovo za ${pexPokusy} pokusů!</div>
+      <button class="res-next" onclick="startPexeso()">Hrát znovu ›</button>
+    </div>`:""}`;
+  // Přednahrát postery
+  pexKarty.forEach(k=>{if(!CACHE[k.imdb])getPoster(k.imdb);});
+}
+
+async function klikPex(pos){
+  if(pexCeka) return;
+  const k=pexKarty[pos];
+  if(k.odkryta||k.sparovana) return;
+  k.odkryta=true;
+  // Načíst poster
+  if(!CACHE[k.imdb]) await getPoster(k.imdb);
+  const tile=document.getElementById("pex_"+pos);
+  if(tile){
+    tile.classList.add("odkryta");
+    tile.innerHTML=CACHE[k.imdb]?`<img src="${CACHE[k.imdb]}" style="width:100%;height:100%;object-fit:cover">`:"🎬";
+  }
+  pexOdkryte.push(pos);
+  if(pexOdkryte.length===2){
+    pexPokusy++;
+    pexCeka=true;
+    const[a,b]=pexOdkryte;
+    const ka=pexKarty[a],kb=pexKarty[b];
+    if(ka.id===kb.id){
+      // Spárováno
+      setTimeout(()=>{
+        ka.sparovana=kb.sparovana=true;
+        pexSparovane.push(ka.id);
+        pexOdkryte=[];pexCeka=false;
+        renderPexeso();
+      },600);
+    }else{
+      setTimeout(()=>{
+        ka.odkryta=kb.odkryta=false;
+        pexOdkryte=[];pexCeka=false;
+        renderPexeso();
+      },1000);
+    }
+  }
+}
+
+// ══════════════════════════════════════
+// HRA: OMALOVÁNKY
+// ══════════════════════════════════════
+const OMAL_BARVY=["#FF4444","#FF8C00","#FFD700","#44BB44","#4488FF","#9944FF","#FF44AA","#FFFFFF","#888888","#000000"];
+
+async function startOmalov(){
+  const film=mix(aktHraFilmy)[0];
+  const src=await getPoster(film.imdb);
+  omalBarva=OMAL_BARVY[0];
+  document.getElementById("mini-body").innerHTML=`
+    <div class="mini-lbl">🖍️ Omalovánky – ${film.title}</div>
+    <div class="mini-hint">Vyber barvu a klepni na plakát</div>
+    <div class="omal-barvy" id="omal-barvy">
+      ${OMAL_BARVY.map((b,i)=>`<div class="omal-barva ${i===0?"on":""}" style="background:${b}" onclick="vybrOmalBarvu('${b}',this)"></div>`).join("")}
+    </div>
+    <div style="width:100%;border-radius:16px;overflow:hidden;position:relative">
+      <canvas id="omal-canvas" width="600" height="400" style="width:100%;display:block;border-radius:16px;cursor:crosshair"></canvas>
+    </div>
+    <div style="display:flex;gap:10px;width:100%">
+      <button class="mini-opt" style="text-align:center;flex:1" onclick="omalVycistit()">🗑️ Vymazat</button>
+      <button class="mini-opt" style="text-align:center;flex:1;background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3);color:#FFD60A" onclick="startOmalov()">🎬 Nový film</button>
+    </div>`;
+
+  omalCanvas=document.getElementById("omal-canvas");
+  omalCtx=omalCanvas.getContext("2d");
+  if(src){
+    const img=new Image();
+    img.crossOrigin="anonymous";
+    img.onload=()=>{
+      omalCtx.drawImage(img,0,0,600,400);
+      // Přidat filtr pro omalovánkový efekt
+      omalCtx.globalAlpha=0.4;
+      omalCtx.fillStyle="#fff";
+      omalCtx.fillRect(0,0,600,400);
+      omalCtx.globalAlpha=1;
+    };
+    img.src=src;
+  }else{
+    omalCtx.fillStyle="#1a1a2e";
+    omalCtx.fillRect(0,0,600,400);
+    omalCtx.fillStyle="rgba(255,255,255,.3)";
+    omalCtx.font="bold 24px system-ui";
+    omalCtx.textAlign="center";
+    omalCtx.fillText("🎬 "+film.title,300,200);
+  }
+
+  let kreslim=false;
+  const getPos=(e)=>{
+    const rect=omalCanvas.getBoundingClientRect();
+    const scaleX=600/rect.width,scaleY=400/rect.height;
+    const src=e.touches?e.touches[0]:e;
+    return{x:(src.clientX-rect.left)*scaleX,y:(src.clientY-rect.top)*scaleY};
+  };
+  const start=(e)=>{e.preventDefault();kreslim=true;const p=getPos(e);omalCtx.beginPath();omalCtx.moveTo(p.x,p.y);};
+  const move=(e)=>{e.preventDefault();if(!kreslim)return;const p=getPos(e);omalCtx.lineTo(p.x,p.y);omalCtx.strokeStyle=omalBarva;omalCtx.lineWidth=18;omalCtx.lineCap="round";omalCtx.lineJoin="round";omalCtx.stroke();};
+  const stop=(e)=>{e.preventDefault();kreslim=false;};
+  omalCanvas.addEventListener("mousedown",start);
+  omalCanvas.addEventListener("mousemove",move);
+  omalCanvas.addEventListener("mouseup",stop);
+  omalCanvas.addEventListener("touchstart",start,{passive:false});
+  omalCanvas.addEventListener("touchmove",move,{passive:false});
+  omalCanvas.addEventListener("touchend",stop,{passive:false});
+}
+
+function vybrOmalBarvu(barva,el){
+  omalBarva=barva;
+  document.querySelectorAll(".omal-barva").forEach(b=>b.classList.remove("on"));
+  el.classList.add("on");
+}
+
+function omalVycistit(){
+  if(omalCtx) omalCtx.clearRect(0,0,600,400);
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+renderDiffList();
+renderHryGrid();
+</script>
+
+</body>
+</html>
