@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>🎬 Filmáček</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#1a0a2e;font-family:system-ui,-apple-system,sans-serif;color:#fff;min-height:100vh}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes slideR{from{transform:translateX(24px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes rainbow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes twinkle{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+@keyframes bounce{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-8px) scale(1.08)}60%{transform:translateY(-4px) scale(1.04)}}
+
+/* HOME */
+#home{background:#1a0a2e;align-items:center;padding:0 24px;position:relative;overflow:hidden}
+#home-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+#home-bg-a,#home-bg-b{position:absolute;inset:0;background-size:cover;background-position:center 30%;transition:opacity 2.5s ease;filter:blur(12px) brightness(.6);transform:scale(1.08)}
+#home-bg-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(15,5,35,.82) 0%,rgba(20,8,42,.72) 30%,rgba(26,10,46,.88) 55%,rgba(26,10,46,1) 78%)}
+#home>*:not(#home-bg){position:relative;z-index:1}
+.home-emoji{font-size:76px;animation:bounce 2.4s ease-in-out infinite;filter:drop-shadow(0 0 24px rgba(255,200,50,.7)) drop-shadow(0 0 48px rgba(255,100,200,.4));margin-bottom:10px;text-align:center}
+.home-title{font-size:44px;font-weight:900;text-align:center;background:linear-gradient(130deg,#fff 0%,#ffe066 35%,#ff88cc 65%,#88ccff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px}
+.home-sub{font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-top:6px;margin-bottom:32px;letter-spacing:.5px}
+.home-cards{display:flex;flex-direction:column;gap:14px;width:100%;max-width:420px}
+.hcard{border-radius:28px;cursor:pointer;overflow:hidden;animation:slideUp .5s ease both;transition:transform .18s;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.hcard:active{transform:scale(.96)}
+.hcard-body{padding:24px 22px;display:flex;align-items:center;gap:18px}
+.hcard-icon{font-size:44px;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))}
+.hcard-name{font-size:22px;font-weight:900;margin-bottom:4px}
+.hcard-desc{font-size:12px;opacity:.65;line-height:1.45}
+.hcard-arrow{font-size:26px;opacity:.6;flex-shrink:0}
+.home-footer{margin-top:auto;padding:20px 0;font-size:10px;color:rgba(255,255,255,.15);letter-spacing:2px;text-align:center}
+
+/* NAVIGATION */
+.back-btn{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.page-header{padding:52px 0 20px;display:flex;align-items:center;gap:14px}
+.page-title{font-size:22px;font-weight:800}
+.topbar{display:flex;align-items:center;padding:50px 22px 14px;gap:12px}
+.progress-bar{flex:1;height:7px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:width .4s}
+
+/* KVÍZ */
+#vybrat-kviz{background:linear-gradient(160deg,#1a0a2e,#0f1a3a);padding:0 22px}
+.kviz-btn{display:flex;align-items:center;gap:16px;padding:20px;border-radius:24px;border:2px solid;cursor:pointer;margin-bottom:14px;transition:transform .18s;animation:slideUp .5s ease both;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.kviz-btn:active{transform:scale(.96)}
+.kviz-btn-icon{width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0}
+.kviz-btn-info{flex:1}
+.kviz-btn-name{font-size:20px;font-weight:900;margin-bottom:4px}
+.kviz-btn-sub{font-size:12px;color:rgba(255,255,255,.45)}
+.kviz-btn-hs{text-align:right;flex-shrink:0}
+.kviz-btn-hs-l{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1px}
+.kviz-btn-hs-v{font-size:18px;font-weight:800}
+
+#kviz-anim,#kviz-znalec{background:linear-gradient(160deg,#1a0a2e,#0f1a3a)}
+.kviz-body{flex:1;padding:0 22px 28px;overflow-y:auto;animation:slideR .35s ease}
+.poster-box{margin-bottom:16px;border-radius:18px;overflow:hidden;height:210px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.poster-box img{width:100%;height:100%;object-fit:cover}
+.opt{display:flex;align-items:center;gap:12px;padding:15px;border-radius:16px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);cursor:pointer;width:100%;text-align:left;margin-bottom:10px;transition:all .22s;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.opt:active{transform:scale(.97)}
+.opt.ok{background:rgba(52,220,90,.22);border-color:#34C759;box-shadow:0 0 16px rgba(52,220,90,.3)}
+.opt.err{background:rgba(255,59,48,.22);border-color:#FF3B30;box-shadow:0 0 16px rgba(255,59,48,.3)}
+.opt.dim{opacity:.22}
+.opt-letter{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.opt-text{font-size:15px;font-weight:700;flex:1}
+
+.zn-q{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin-bottom:20px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.zn-q-badge{font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:10px;font-weight:700}
+.zn-q-text{font-size:17px;font-weight:700;line-height:1.55;color:#fff}
+
+/* HRY */
+#vybrat-hry{background:linear-gradient(160deg,#1a0a2e,#1a0a1e);padding:0 22px}
+.hry-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:32px}
+.hra-card{padding:22px 12px 18px;border-radius:22px;border:2px solid;cursor:pointer;text-align:center;transition:transform .18s;animation:slideUp .4s ease both;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.hra-card:active{transform:scale(.94)}
+.hra-card-emoji{font-size:40px;margin-bottom:10px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3))}
+.hra-card-name{font-size:14px;font-weight:800;margin-bottom:4px}
+.hra-card-desc{font-size:11px;opacity:.6;line-height:1.4}
+
+/* MINIHRA */
+#minihra{background:linear-gradient(160deg,#1a0a2e,#1a0a1e)}
+.mini-topbar{display:flex;align-items:center;justify-content:space-between;padding:50px 22px 18px}
+.mini-topbar-name{font-size:20px;font-weight:900;background:linear-gradient(90deg,#FFD60A,#FF8C00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.mini-exit{padding:8px 16px;border-radius:20px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.55);font-size:12px;cursor:pointer;font-weight:600}
+.mini-body{flex:1;padding:0 16px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;overflow-y:auto}
+.mini-lbl{font-size:13px;color:rgba(255,255,255,.5);text-align:center}
+.mini-opt{padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.09);border:2px solid rgba(255,255,255,.13);color:#fff;font-size:14px;font-weight:700;cursor:pointer;width:100%;text-align:left;margin-bottom:8px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.mini-opt:active{transform:scale(.96)}
+.mini-result{text-align:center;animation:pop .4s ease;width:100%}
+.res-emoji{font-size:58px;margin-bottom:12px;filter:drop-shadow(0 4px 12px rgba(255,200,0,.5))}
+.res-title{font-size:22px;font-weight:900;margin-bottom:6px}
+.res-sub{font-size:14px;color:rgba(255,255,255,.45);margin-bottom:20px}
+.res-next{padding:16px 44px;border-radius:20px;background:linear-gradient(135deg,#FFD60A,#FF8C00);border:none;font-size:17px;font-weight:900;color:#000;cursor:pointer;box-shadow:0 4px 16px rgba(255,180,0,.5)}
+
+/* PEXESO */
+.pex-karta{border-radius:14px;overflow:hidden;cursor:pointer;aspect-ratio:2/3;background:linear-gradient(135deg,#2a1245,#1a2060);border:2px solid rgba(255,255,255,.15);position:relative;display:flex;align-items:center;justify-content:center;font-size:30px;transition:transform .15s;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.pex-karta:active{transform:scale(.94)}
+.pex-karta.odkryta{border-color:rgba(255,255,255,.4)}
+.pex-karta.sparovana{border-color:#34C759;box-shadow:0 0 16px rgba(52,199,89,.4);opacity:.75}
+.pex-karta img{width:100%;height:100%;object-fit:cover}
+
+/* OMALOVÁNKY */
+.omal-paleta{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:10px;padding:10px;background:rgba(255,255,255,.06);border-radius:16px;width:100%}
+.omal-bv{width:100%;aspect-ratio:1;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:border-color .12s,transform .12s;min-width:0;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.omal-bv.on{border-color:#FFD60A !important;transform:scale(1.2);box-shadow:0 0 0 2px rgba(255,215,10,.4)}
+.omal-wrap{background:#fff9ee;border-radius:16px;overflow:hidden;width:100%}
+.omal-wrap svg{display:block;width:100%}
+.omal-btns{display:flex;gap:10px;width:100%}
+.omal-btn{flex:1;padding:12px;border-radius:14px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.14);color:#fff;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
+.omal-btn.z{background:rgba(255,215,0,.12);border-color:rgba(255,215,0,.4);color:#FFD60A}
+.omal-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;width:100%;-webkit-overflow-scrolling:touch}
+.omal-tab{padding:6px 12px;border-radius:18px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;color:rgba(255,255,255,.5);flex-shrink:0;transition:all .2s}
+.omal-tab.on{border-color:rgba(255,220,80,.7);background:rgba(255,220,80,.15);color:#FFD60A}
+
+/* VÝSLEDKY */
+#vysledky{background:linear-gradient(160deg,#1a0a2e,#0f1a3a);align-items:center;justify-content:center;padding:40px 22px}
+.vysl-wrap{width:100%;max-width:440px}
+.vysl-emoji{font-size:80px;text-align:center;margin-bottom:14px;animation:pop .6s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 4px 16px rgba(255,200,0,.5))}
+.vysl-title{font-size:28px;font-weight:900;text-align:center;margin-bottom:6px}
+.vysl-sub{font-size:14px;color:rgba(255,255,255,.45);text-align:center}
+.vysl-new{margin-top:10px;font-size:13px;color:#FFD60A;font-weight:700;text-align:center;animation:pulse 1s infinite}
+.stats-row{display:flex;width:100%;border-radius:22px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.1);overflow:hidden;margin:26px 0 12px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.stat-col{flex:1;padding:18px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.08)}
+.stat-col:last-child{border-right:none}
+.stat-v{font-size:22px;font-weight:900;margin-bottom:3px}
+.stat-l{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1px}
+.rekord-row{width:100%;border-radius:16px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);padding:14px 20px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center}
+.rekord-l{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-bottom:2px}
+.rekord-v{font-size:17px;font-weight:800}
+.prog-bar{height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin:10px 0 4px;width:100%}
+.prog-fill{height:100%;border-radius:3px;transition:width .3s}
+.prog-text{font-size:11px;color:rgba(255,255,255,.35);text-align:center}
+
+/* VHS – Devadesátky */
+#kviz-90s{background:#0a0a0a;position:relative}
+#kviz-90s::before{content:’’;position:absolute;inset:0;pointer-events:none;z-index:0;
+background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0px,rgba(0,0,0,.13) 1px,transparent 1px,transparent 3px)}
+#kviz-90s>*{position:relative;z-index:1}
+.vhs-topbar{display:flex;align-items:center;padding:50px 18px 12px;gap:10px;background:rgba(0,0,0,.4)}
+.vhs-rec{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#ff2222;letter-spacing:1px;animation:pulse .9s infinite}
+.vhs-rec-dot{width:8px;height:8px;border-radius:50%;background:#ff2222}
+.vhs-body{flex:1;padding:0 16px 24px;overflow-y:auto}
+.vhs-poster{margin-bottom:12px;border-radius:10px;overflow:hidden;height:190px;
+background:#111;display:flex;align-items:center;justify-content:center;
+border:2px solid rgba(255,255,255,.1);position:relative}
+.vhs-poster img{width:100%;height:100%;object-fit:cover;filter:contrast(1.05) saturate(1.1)}
+.vhs-poster::after{content:’’;position:absolute;inset:0;
+background:repeating-linear-gradient(0deg,transparent 0px,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px)}
+.vhs-q-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+.vhs-q-badge{font-size:10px;letter-spacing:2px;color:#ff8800;margin-bottom:8px;font-weight:700}
+.vhs-q-text{font-size:16px;font-weight:700;line-height:1.5;color:#fff}
+.vhs-opt{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;
+border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);
+cursor:pointer;width:100%;text-align:left;margin-bottom:9px;transition:all .22s}
+.vhs-opt:active{transform:scale(.97)}
+.vhs-opt.ok{background:rgba(52,220,90,.22);border-color:#34C759}
+.vhs-opt.err{background:rgba(255,59,48,.22);border-color:#FF3B30}
+.vhs-opt.dim{opacity:.2}
+.vhs-opt-letter{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
+justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;background:rgba(255,136,0,.2);color:#ff8800}
+.vhs-opt-text{font-size:14px;font-weight:600;flex:1}
+.vedel-box{border-radius:14px;padding:14px 16px;margin-top:8px;
+background:linear-gradient(135deg,rgba(255,200,0,.12),rgba(255,100,0,.08));
+border:1.5px solid rgba(255,180,0,.35);animation:slideUp .4s ease}
+.vedel-label{font-size:10px;font-weight:800;color:#ffaa00;letter-spacing:2px;margin-bottom:6px}
+.vedel-text{font-size:13px;color:rgba(255,255,255,.8);line-height:1.55}
+</style>
+
+</head>
+<body>
+
+<div id="home" class="screen active">
+  <div id="home-bg">
+    <div id="home-bg-a" style="opacity:1"></div>
+    <div id="home-bg-b" style="opacity:0"></div>
+    <div id="home-bg-overlay"></div>
+  </div>
+  <div style="padding-top:70px;width:100%;max-width:420px;text-align:center">
+    <div class="home-emoji">🎬</div>
+    <div class="home-title">Filmáček</div>
+    <div class="home-sub">Kvízy a hry o filmech</div>
+  </div>
+  <div class="home-cards">
+    <div class="hcard" id="hcard-kviz" style="animation-delay:.1s" onclick="showScreen('vybrat-kviz')">
+      <div class="hcard-body">
+        <div class="hcard-icon">🎬</div>
+        <div style="flex:1"><div class="hcard-name">Kvíz</div><div class="hcard-desc">Uhádni film · Otázky · Studia · 📼 Pro rodiče</div></div>
+        <div class="hcard-arrow">›</div>
+      </div>
+    </div>
+    <div class="hcard" id="hcard-hry" style="animation-delay:.2s" onclick="showScreen('vybrat-hry')">
+      <div class="hcard-body">
+        <div class="hcard-icon">🎮</div>
+        <div style="flex:1"><div class="hcard-name">Hry</div><div class="hcard-desc">Hádej film · Puzzle · Pexeso · Omalovánky</div></div>
+        <div class="hcard-arrow">›</div>
+      </div>
+    </div>
+  </div>
+  <div class="home-footer">by JiHl · Nekomerční vzdělávací aplikace<br>Plakáty a postavy jsou majetkem jejich vlastníků · Data: OMDb</div>
+</div>
+
+<div id="vybrat-kviz" class="screen">
+  <div style="padding:0 22px;flex:1;background:linear-gradient(160deg,#0d0d1a,#12101e)">
+    <div class="page-header">
+      <button class="back-btn" onclick="showScreen('home')">←</button>
+      <div class="page-title">🎬 Kvíz</div>
+    </div>
+
+```
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+  <div style="flex:1;height:1px;background:rgba(255,184,48,.25)"></div>
+  <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,184,48,.6)">🧸 PRO DĚTI</div>
+  <div style="flex:1;height:1px;background:rgba(255,184,48,.25)"></div>
+</div>
+<div class="kviz-btn" style="background:linear-gradient(135deg,rgba(255,184,48,.2),rgba(255,100,0,.15));border-color:rgba(255,184,48,.6);animation-delay:.1s;box-shadow:0 4px 20px rgba(255,150,0,.2)" onclick="spustitKviz('anim')">
+  <div class="kviz-btn-icon" style="background:rgba(255,184,48,.15)">🎨</div>
+  <div class="kviz-btn-info">
+    <div class="kviz-btn-name">Obrázky</div>
+    <div class="kviz-btn-sub">Plakát · uhádni název · filmy i seriály</div>
+  </div>
+  <div id="hs-anim" class="kviz-btn-hs"></div>
+  <div style="color:#FFB830;font-size:20px;opacity:.6">›</div>
+</div>
+<div class="kviz-btn" style="background:linear-gradient(135deg,rgba(232,68,90,.2),rgba(150,0,150,.15));border-color:rgba(232,68,90,.6);animation-delay:.2s;box-shadow:0 4px 20px rgba(220,50,100,.2)" onclick="spustitKviz('znalec')">
+  <div class="kviz-btn-icon" style="background:rgba(232,68,90,.15)">🧠</div>
+  <div class="kviz-btn-info">
+    <div class="kviz-btn-name">Otázky</div>
+    <div class="kviz-btn-sub">Bez obrázku · jen otázka · filmy a seriály</div>
+  </div>
+  <div id="hs-znalec" class="kviz-btn-hs"></div>
+  <div style="color:#E8445A;font-size:20px;opacity:.6">›</div>
+</div>
+
+<div style="margin-top:6px"></div>
+<div class="kviz-btn" style="background:linear-gradient(135deg,rgba(100,180,255,.2),rgba(50,100,220,.15));border-color:rgba(100,180,255,.6);animation-delay:.3s;box-shadow:0 4px 20px rgba(80,140,255,.2)" onclick="spustitKviz('studio')">
+  <div class="kviz-btn-icon" style="background:rgba(100,180,255,.15)">🏢</div>
+  <div class="kviz-btn-info">
+    <div class="kviz-btn-name">Uhádni studio</div>
+    <div class="kviz-btn-sub">Ke kterému studiu patří film nebo seriál?</div>
+  </div>
+  <div id="hs-studio" class="kviz-btn-hs"></div>
+  <div style="color:#64b4ff;font-size:20px;opacity:.6">›</div>
+</div>
+
+<div style="display:flex;align-items:center;gap:10px;margin:20px 0 10px">
+  <div style="flex:1;height:1px;background:rgba(255,140,0,.25)"></div>
+  <div style="font-size:10px;font-weight:800;letter-spacing:3px;color:rgba(255,140,0,.5)">📼 PRO RODIČE</div>
+  <div style="flex:1;height:1px;background:rgba(255,140,0,.25)"></div>
+</div>
+<div class="kviz-btn" style="background:linear-gradient(135deg,rgba(40,30,0,.8),rgba(80,40,0,.6));border:2px solid rgba(255,140,0,.5);animation-delay:.4s;box-shadow:0 4px 20px rgba(180,80,0,.3)" onclick="spustitKviz('90s')">
+  <div class="kviz-btn-icon" style="background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.3)">📼</div>
+  <div class="kviz-btn-info">
+    <div class="kviz-btn-name" style="color:#ff8800">Devadesátky</div>
+    <div class="kviz-btn-sub">Filmy 1990–1999 · fakta · zajímavosti</div>
+  </div>
+  <div id="hs-90s" class="kviz-btn-hs"></div>
+  <div style="color:#ff8800;font-size:20px;opacity:.6">›</div>
+</div>
+```
+
+  </div>
+</div>
+
+<div id="kviz-90s" class="screen">
+  <div class="vhs-topbar">
+    <button class="back-btn" onclick="potvrzeniZpet('vybrat-kviz')" style="background:rgba(255,255,255,.1)">←</button>
+    <div class="progress-bar"><div id="v90-prog" class="progress-fill" style="background:#ff8800"></div></div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <span style="color:#FFD60A;font-size:13px">★</span>
+      <span id="v90-skore" style="font-size:15px;font-weight:800;color:#ff8800">0</span>
+    </div>
+  </div>
+  <div class="vhs-body" id="v90-body"></div>
+</div>
+
+<div id="kviz-anim" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="potvrzeniZpet('vybrat-kviz')">←</button>
+    <div class="progress-bar"><div id="ka-prog" class="progress-fill" style="background:#FFB830"></div></div>
+    <div style="display:flex;align-items:center;gap:5px"><span style="color:#FFD60A;font-size:13px">★</span><span id="ka-skore" style="font-size:15px;font-weight:700">0</span></div>
+  </div>
+  <div class="kviz-body" id="ka-body"></div>
+</div>
+
+<div id="kviz-znalec" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="potvrzeniZpet('vybrat-kviz')">←</button>
+    <div class="progress-bar"><div id="kz-prog" class="progress-fill" style="background:#E8445A"></div></div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <span style="color:#FFD60A;font-size:13px">★</span>
+      <span id="kz-skore" style="font-size:15px;font-weight:700">0</span>
+      <span id="kz-serie" style="font-size:11px;color:#FF9F0A;margin-left:3px"></span>
+    </div>
+  </div>
+  <div class="kviz-body" id="kz-body"></div>
+</div>
+
+<div id="vybrat-hry" class="screen">
+  <div style="background:linear-gradient(160deg,#0d0d1a,#15102a);padding:0 22px;flex:1">
+    <div class="page-header">
+      <button class="back-btn" onclick="showScreen('home')">←</button>
+      <div class="page-title">🎮 Hry</div>
+    </div>
+    <p style="font-size:13px;color:rgba(255,255,255,.35);margin-bottom:20px">Vyber si hru</p>
+    <div class="hry-grid" id="hry-grid"></div>
+  </div>
+</div>
+
+<div id="minihra" class="screen">
+  <div style="background:linear-gradient(160deg,#0d0d1a,#15102a);flex:1;display:flex;flex-direction:column">
+    <div class="mini-topbar">
+      <div id="mini-name" class="mini-topbar-name"></div>
+      <button class="mini-exit" id="mini-exit-btn" onclick="potvrzeniZpetMini()">✕ Konec</button>
+    </div>
+    <div class="mini-body" id="mini-body"></div>
+  </div>
+</div>
+
+<div id="vysledky" class="screen">
+  <div class="vysl-wrap">
+    <div id="v-emoji" class="vysl-emoji"></div>
+    <div id="v-title" class="vysl-title"></div>
+    <div id="v-sub" class="vysl-sub"></div>
+    <div id="v-new" class="vysl-new" style="display:none">🎊 Nový rekord!</div>
+    <div class="stats-row">
+      <div class="stat-col"><div id="v-spravne" class="stat-v"></div><div class="stat-l">SPRÁVNĚ</div></div>
+      <div class="stat-col"><div id="v-pct" class="stat-v" style="color:#FFD60A"></div><div class="stat-l">ÚSPĚŠNOST</div></div>
+      <div class="stat-col"><div id="v-serie" class="stat-v" style="color:#FF9F0A"></div><div class="stat-l">SÉRIE</div></div>
+    </div>
+    <div class="rekord-row">
+      <div><div class="rekord-l">🏅 REKORD</div><div id="v-rekord" class="rekord-v"></div></div>
+    </div>
+    <button id="v-znovu" class="opt" style="margin-bottom:10px;border-radius:18px;font-size:17px;font-weight:800;color:#000;cursor:pointer" onclick="znovu()">↺ Hrát znovu</button>
+    <button style="padding:14px;border-radius:16px;background:rgba(255,255,255,.06);border:none;font-size:14px;color:rgba(255,255,255,.4);cursor:pointer;width:100%" onclick="showScreen('home')">🏠 Domů</button>
+  </div>
+</div>
+
+<script>
+const OMDB = '11f70c2b';
+const CACHE = {};
+
+const ANIMOVANE = [
+  {id:'a1',title:'Lví král',year:1994,imdb:'tt0110357'},
+  {id:'a2',title:'Toy Story',year:1995,imdb:'tt0114709'},
+  {id:'a3',title:'Jak vycvičit draka',year:2010,imdb:'tt0892769'},
+  {id:'a4',title:'Ledové království',year:2013,imdb:'tt2294629'},
+  {id:'a5',title:'Hledá se Nemo',year:2003,imdb:'tt0266543'},
+  {id:'a6',title:'Shrek',year:2001,imdb:'tt0126029'},
+  {id:'a7',title:'Ratatouille',year:2007,imdb:'tt0382932'},
+  {id:'a8',title:'Madagaskar',year:2005,imdb:'tt0351283'},
+  {id:'a9',title:'Úžasňákovi',year:2004,imdb:'tt0317705'},
+  {id:'a10',title:'Kung Fu Panda',year:2008,imdb:'tt0441773'},
+  {id:'a11',title:'Moana',year:2016,imdb:'tt3521164'},
+  {id:'a12',title:'Coco',year:2017,imdb:'tt2380307'},
+  {id:'a13',title:'Encanto',year:2021,imdb:'tt2953050'},
+  {id:'a14',title:'Zpívej',year:2016,imdb:'tt3470600'},
+  {id:'a15',title:'Minioni',year:2015,imdb:'tt2293640'},
+  // Seriály
+  {id:'s1',title:'SpongeBob v kalhotách',year:1999,imdb:'tt0206512'},
+  {id:'s2',title:'Tlapková patrola',year:2013,imdb:'tt2756752'},
+  {id:'s3',title:'Avatar: Legenda o Aangovi',year:2005,imdb:'tt0417299'},
+  {id:'s4',title:'Ninjago',year:2011,imdb:'tt1812614'},
+  {id:'s5',title:'Peppa Prasátko',year:2004,imdb:'tt0426042'},
+  {id:'s6',title:'Pokémon',year:1997,imdb:'tt0168366'},
+  {id:'s7',title:'Gabinin kouzelný domek',year:2021,imdb:'tt11959554'},
+  {id:'s8',title:'Bluey',year:2018,imdb:'tt8587060'},
+  {id:'s9',title:'Miraculous: Příběhy Beruščice',year:2015,imdb:'tt4786824'},
+  {id:'s10',title:'Gravity Falls',year:2012,imdb:'tt1840492'},
+  {id:'s11',title:'Hilda',year:2018,imdb:'tt7529770'}
+];
+
+const ZNALEC = [
+  // Lví král
+  {q:'Ve kterém roce byl natočen Lví král?',a:'1994',m:['1992','1993','1994','1996']},
+  {q:'Jak se jmenuje Simbův otec?',a:'Mufasa',m:['Scar','Mufasa','Zazu','Rafiki']},
+  {q:'Jak se jmenuje záporák v Lvím králi?',a:'Scar',m:['Scar','Hyena','Zazu','Banzai']},
+  {q:'Kdo je Simbův nejlepší přítel z dětství?',a:'Nala',m:['Nala','Timon','Pumba','Zazu']},
+  // Toy Story
+  {q:'Kdo je záporák v Toy Story 1?',a:'Sid',m:['Lotso','Zurg','Sid','Pete']},
+  {q:'Jak se jmenuje dívka, která najde Woodyho ve 2. díle?',a:'Jessiina fanynka',m:['Emily','Sarah','Jessiina fanynka','Bonnie']},
+  {q:'Co je Buzz Lightyear zač?',a:'Astronaut',m:['Voják','Astronaut','Detektiv','Pilot']},
+  {q:'Jak se jmenuje chlapec, jemuž Woody patří?',a:'Andy',m:['Andy','Sid','Bonnie','Al']},
+  // Jak vycvičit draka
+  {q:'Jak se jmenuje drak v Jak vycvičit draka?',a:'Bezzubka',m:['Skála','Bezzubka','Ohníček','Bleskáč']},
+  {q:'Z jaké vesnice pochází Hiccup?',a:'Berk',m:['Berk','Arendelle','Motunui','DunBroch']},
+  // Ledové království
+  {q:'Kolik sester má Elsa?',a:'Jednu – Annu',m:['Žádnou','Dvě','Jednu – Annu','Tři']},
+  {q:'Kdo zpívá Let It Go?',a:'Elsa',m:['Anna','Elsa','Olaf','Kristoff']},
+  {q:'Jak se jmenuje sněhulák v Ledovém království?',a:'Olaf',m:['Sven','Olaf','Hans','Kristoff']},
+  {q:'Kdo je princ Hans původem z?',a:'Jižních ostrovů',m:['Severu','Jižních ostrovů','Arendellu','Francie']},
+  // Hledá se Nemo
+  {q:'Jak se jmenuje otec Nema?',a:'Marlin',m:['Nemo','Marlin','Gill','Crush']},
+  {q:'Jak se jmenuje ryba, která pomáhá Marlinovi?',a:'Dory',m:['Dory','Pearl','Gill','Bloat']},
+  {q:'Kde Nemo skončí v záchytné nádrži?',a:'V zubní ordinaci',m:['V akváriu','V oceánu','V zoo','V zubní ordinaci']},
+  {q:'Jaké zvíře je Crush?',a:'Mořská želva',m:['Delfín','Žralok','Mořská želva','Tučňák']},
+  // Shrek
+  {q:'Jak se jmenuje záporák ve Shrekovi?',a:'Lord Farquaad',m:['Princ Charming','Lord Farquaad','Čarodějnice','Drak']},
+  {q:'Jaká je princezna Fiona ve dne?',a:'Normální dívka',m:['Zlobr','Normální dívka','Elfka','Čarodějnice']},
+  {q:'Jak se jmenuje Shrekův nejlepší přítel?',a:'Osel',m:['Kocour','Osel','Drak','Oslice']},
+  {q:'Ve které pohádkové zemi se odehrává Shrek?',a:'Daleko Daleko',m:['Arendelle','Daleko Daleko','Neverland','Oz']},
+  // Ratatouille
+  {q:'Ve kterém městě se odehrává Ratatouille?',a:'Paříž',m:['Londýn','Paříž','Řím','Madrid']},
+  {q:'Jak se jmenuje hlavní krysa v Ratatouille?',a:'Remy',m:['Remy','Emile','Gusteau','Linguini']},
+  {q:'Jak zní slavná věta kritika Egoa v Ratatouille?',a:'Každý může vařit',m:['Jídlo je umění','Každý může vařit','Vařit je věda','Chuť je vše']},
+  // Madagaskar
+  {q:'Jak se jmenuje hrošice v Madagaskaru?',a:'Gloria',m:['Melman','Alex','Marty','Gloria']},
+  {q:'Jak se jmenuje lev z Madagaskaru?',a:'Alex',m:['Marty','Alex','Melman','Maurice']},
+  {q:'Z jaké zoo pochází zvířata v Madagaskaru?',a:'Central Park Zoo',m:['Bronx Zoo','Central Park Zoo','San Diego Zoo','Berlín Zoo']},
+  // Úžasňákovi
+  {q:'Jakou superschopnost má Dash?',a:'Superrychlost',m:['Neviditelnost','Superrychlost','Elasticita','Létání']},
+  {q:'Jak se jmenuje módní návrhářka v Úžasňácích?',a:'Edna Mode',m:['Mirage','Edna Mode','Helen','Violet']},
+  {q:'Jakou schopnost má Violet?',a:'Neviditelnost a štíty',m:['Neviditelnost a štíty','Létání','Superrychlost','Telekineze']},
+  // Kung Fu Panda
+  {q:'Kde žije Kung Fu Panda?',a:'Údolí míru',m:['Chrám draka','Údolí míru','Hora jang','Říční vesnice']},
+  {q:'Jak se jmenuje záporák v Kung Fu Pandě 1?',a:'Tai Lung',m:['Kai','Tai Lung','Lord Shen','Temný vládce']},
+  {q:'Jak se jmenuje Pův učitel?',a:'Mistr Shifu',m:['Mistr Oogway','Mistr Shifu','Mistr Mantis','Mistr Crane']},
+  // Moana
+  {q:'Z jakého ostrova pochází Moana?',a:'Motunui',m:['Hawaii','Fiji','Motunui','Bora Bora']},
+  {q:'Kdo ukradl srdce Te Fiti?',a:'Maui',m:['Tamatoa','Moana','Maui','Te Ka']},
+  // Coco
+  {q:'Jaký nástroj hraje Miguel v Coco?',a:'Kytara',m:['Trubka','Kytara','Piano','Housle']},
+  {q:'Kdo je skutečným hrdinou v Coco?',a:'Hector',m:['Ernesto','Hector','Chicharron','Imelda']},
+  // Encanto
+  {q:'Jak se jmenuje rodina v Encanto?',a:'Madrigal',m:['Castillo','Madrigal','Rivera','Mirabel']},
+  {q:'Jaký dar nemá Mirabel v Encanto?',a:'Nemá žádný dar',m:['Léčení','Síla','Nemá žádný dar','Rostliny']},
+  // Zpívej
+  {q:'Jaké zvíře je Buster Moon v Zpívej?',a:'Koala',m:['Medvěd','Koala','Klokan','Tapír']},
+  {q:'Co chce Buster Moon zachránit v Zpívej?',a:'Divadlo',m:['Školu','Divadlo','Cirkus','Kino']},
+  // Minioni
+  {q:'Jakou barvu mají Minioni?',a:'Žlutou',m:['Modrou','Zelenou','Žlutou','Oranžovou']},
+  {q:'Pro koho pracují Minioni celé dějiny?',a:'Pro největšího záporáka',m:['Pro hrdiny','Pro největšího záporáka','Pro krále','Pro science']},
+  // SpongeBob
+  {q:'Kde bydlí SpongeBob?',a:'V ananasu',m:['V kameni','V ananasu','V lastůrce','V houbě']},
+  {q:'Jak se jmenuje SpongeBobův nejlepší kamarád?',a:'Patrick',m:['Squidward','Patrick','Sandy','Gary']},
+  {q:'V jakém městě se odehrává SpongeBob?',a:'Bikini Bottom',m:['Korálové město','Bikini Bottom','Podmořský ráj','Deep City']},
+  {q:'Co SpongeBob dělá v práci?',a:'Smaží hamburgery',m:['Uklízí','Smaží hamburgery','Vaří polévku','Prodává zmrzlinu']},
+  // Tlapková patrola
+  {q:'Jak se jmenuje chlapec, který vede Tlapkovou patrolu?',a:'Ryder',m:['Chase','Ryder','Rocky','Rubble']},
+  {q:'Jaké zvíře je Chase z Tlapkové patroly?',a:'Ovčácký pes',m:['Dalmatin','Ovčácký pes','Buldok','Retrívr']},
+  {q:'Jaké zvíře je Marshall z Tlapkové patroly?',a:'Dalmatin',m:['Dalmatin','Labrador','Pudl','Boxer']},
+  // Avatar
+  {q:'Jak se jmenuje hlavní hrdina Avatara?',a:'Aang',m:['Zuko','Aang','Sokka','Toph']},
+  {q:'Jaký živel ovládá Aang jako avatar jako první?',a:'Vzduch',m:['Oheň','Vodu','Vzduch','Zemi']},
+  {q:'Z jakého národa pochází princ Zuko?',a:'Ohnivého národa',m:['Vodního kmene','Ohnivého národa','Království Země','Vzduchového chrámu']},
+  {q:'Jak se jmenuje Aangův létající bizon?',a:'Appa',m:['Momo','Appa','Bumi','Yue']},
+  // Ninjago
+  {q:'Jaký živel ovládá Kai v Ninjago?',a:'Oheň',m:['Led','Oheň','Blesk','Zemina']},
+  {q:'Jak se jmenuje Lloydův otec v Ninjago?',a:'Lord Garmadon',m:['Wu','Lord Garmadon','Cole','Zane']},
+  {q:'Jak se jmenuje mistr, který trénuje ninje v Ninjago?',a:'Wu',m:['Garmadon','Sensei Chen','Wu','Nya']},
+  // Peppa
+  {q:'Jak se jmenuje Peppino nejlepší kamarádka?',a:'Suzy Ovečka',m:['Rebeka Králíček','Suzy Ovečka','Danny Pes','Zoe Zebra']},
+  {q:'Jakou činnost miluje Peppa Prasátko nejvíce?',a:'Skákání v kalužích',m:['Kreslení','Skákání v kalužích','Plavání','Čtení']},
+  // Pokémon
+  {q:'Jak se jmenuje Ashovo první Pokémon?',a:'Pikachu',m:['Bulbasaur','Charmander','Pikachu','Squirtle']},
+  {q:'Jaký typ je Pikachu?',a:'Elektrický',m:['Ohnivý','Elektrický','Vodní','Normální']},
+  {q:'Co křičí Pokémoni místo jiných slov?',a:'Vlastní jméno',m:['Pika','Vlastní jméno','Číslici','Pokémon']},
+  // Gabby
+  {q:'Kde se odehrává Gabinin kouzelný domek?',a:'V kouzelném domečku pro panenky',m:['Ve škole','V lese','V kouzelném domečku pro panenky','Na farmě']},
+  {q:'Jak se jmenuje Gabbiny kočičí kamarádka?',a:'Kočka Panenka',m:['Kitty Baby','Kočka Panenka','Meow Meow','Pandy Panenka']},
+  // Bluey
+  {q:'Jakého plemene pes je Bluey?',a:'Blue Heeler',m:['Labrador','Pudl','Blue Heeler','Dalmatin']},
+  {q:'V jaké zemi se odehrává Bluey?',a:'V Austrálii',m:['V Anglii','V Austrálii','V Americe','Na Novém Zélandu']},
+  // Miraculous
+  {q:'Jak se jmenuje tajná identita Beruščice?',a:'Marinette',m:['Alya','Marinette','Chloé','Luka']},
+  {q:'Jak se jmenuje hlavní záporák v Miraculous?',a:'Hawkmoth',m:['Papillon','Hawkmoth','Monarch','Shadowmoth']},
+  // Gravity Falls
+  {q:'Kdo jsou dvojčata v Gravity Falls?',a:'Dipper a Mabel',m:['Stan a Ford','Dipper a Mabel','Pacifica a Gideon','Wendy a Soos']},
+  {q:'V jakém státě USA leží Gravity Falls?',a:'Oregon',m:['Montana','Oregon','Colorado','Washington']},
+  {q:'Jak se jmenuje Dippův velký tajný deník?',a:'Journal 3',m:['Tajný zápisník','Journal 3','Mystery Book','Dippův deník']},
+  // Hilda
+  {q:'Kde žije Hilda?',a:'Ve Trollbergu',m:['V Lese','V horách','Ve Trollbergu','Na ostrově']},
+  {q:'Co je Hildino tajné místo na začátku seriálu?',a:'Karavana v lese',m:['Jeskyně','Karavana v lese','Hrad','Strom']},
+];
+
+const FILMY_90S = [
+  {id:'n01',title:'Jurský park',year:1993,imdb:'tt0107290',
+   otazky:[
+    {q:'Kdo natočil Jurský park?',a:'Steven Spielberg',m:['James Cameron','Steven Spielberg','Tim Burton','Ron Howard']},
+    {q:'Která společnost v Jurském parku oživila dinosaury?',a:'InGen',m:['BioGen','InGen','DinoTech','GeneX']}
+   ],
+   zajimavost:'Zvuky dinosaurů jsou mix zvuků slona, tygra a aligátora. T-Rex model se třásl, protože byl postříkán vodou ze zavlažovacích trubek ve studiu.'},
+  {id:'n02',title:'Sám doma',year:1990,imdb:'tt0099785',
+   otazky:[
+    {q:'Jak se jmenuje hlavní hrdina Sám doma?',a:'Kevin McCallister',m:['Kevin McCallister','Kevin Hart','Kevin Home','Kevin Price']},
+    {q:'Ve kterém státě USA žije rodina McCallisterů?',a:'Illinois',m:['New York','Illinois','California','Florida']}
+   ],
+   zajimavost:'Film byl natočen za pouhých 15 milionů dolarů a vydělal přes 476 milionů – jeden z nejúspěšnějších vánočních filmů vůbec.'},
+  {id:'n03',title:'Titanic',year:1997,imdb:'tt0120338',
+   otazky:[
+    {q:'Kdo režíroval Titanic (1997)?',a:'James Cameron',m:['James Cameron','Steven Spielberg','Ridley Scott','Peter Jackson']},
+    {q:'Jak dlouho trval Titanic v kinech při prvním uvedení?',a:'194 minut',m:['120 minut','154 minut','194 minut','210 minut']}
+   ],
+   zajimavost:'James Cameron musel zkrátit scénu s hvězdnou oblohou – astrofyzik Neil deGrasse Tyson mu napsal, že hvězdy na obloze jsou špatně. Cameron je opravil až ve vydání k výročí.'},
+  {id:'n04',title:'Forrest Gump',year:1994,imdb:'tt0109830',
+   otazky:[
+    {q:'Jaký sport Forrest Gump hrál na univerzitě?',a:'Americký fotbal',m:['Baseball','Americký fotbal','Tenis','Basketbal']},
+    {q:'Co říká Forrest o životě?',a:'Život je jako krabice čokolád',m:['Život je krátký','Život je jako krabice čokolád','Běž Forreste','Vždy to vyjde']}
+   ],
+   zajimavost:'Tom Hanks za roli Forresta Gumpa dostal Oscara. Scéna s běháním přes celou Ameriku trvala natočit 158 dní.'},
+  {id:'n05',title:'Lví král',year:1994,imdb:'tt0110357',
+   otazky:[
+    {q:'Jakou zvukem reve Simba v záběru který trvalo natočit 6 hodin?',a:'Skutečný lev',m:['Animovaný zvuk','Skutečný lev','Herec','Computr']},
+    {q:'Kolik animátorů pracovalo na Lvím králi?',a:'Přes 600',m:['50','200','Přes 600','1200']}
+   ],
+   zajimavost:'Píseň "Hakuna Matata" byla původně 3x delší. Tvůrci ji zkrátili protože testovací publikum děti usínalo.'},
+  {id:'n06',title:'Toy Story',year:1995,imdb:'tt0114709',
+   otazky:[
+    {q:'Toy Story byl první celovečerní film vytvořený jak?',a:'Celý počítačově',m:['Celý počítačově','Celý rukou','Kombinací','Loutkami']},
+    {q:'Kdo namluvil Woodyho v originále?',a:'Tom Hanks',m:['Tom Cruise','Tim Allen','Tom Hanks','Bill Murray']}
+   ],
+   zajimavost:'Pixar měl na výrobu Toy Story pouze 30 animátorů. Tradiční Disney studio by použilo přes 500 kreslířů.'},
+  {id:'n07',title:'Terminátor 2',year:1991,imdb:'tt0103064',
+   otazky:[
+    {q:'Kolik stál Terminátor 2?',a:'102 milionů dolarů',m:['20 milionů','102 milionů dolarů','50 milionů','200 milionů']},
+    {q:'Jak se jmenuje model Terminátora který chrání Johna?',a:'T-800',m:['T-600','T-800','T-1000','T-500']}
+   ],
+   zajimavost:'T-1000 z tekutého kovu byl tehdy revoluční CGI. Každá sekunda digitálního efektu stála přibližně 300 000 dolarů.'},
+  {id:'n08',title:'Pulp Fiction',year:1994,imdb:'tt0110912',
+   otazky:[
+    {q:'Kdo napsal a režíroval Pulp Fiction?',a:'Quentin Tarantino',m:['Martin Scorsese','Quentin Tarantino','Coen Brothers','Oliver Stone']},
+    {q:'Za co Pulp Fiction dostal Oscara?',a:'Nejlepší původní scénář',m:['Nejlepší film','Nejlepší режie','Nejlepší původní scénář','Nejlepší herec']}
+   ],
+   zajimavost:'Hodinky Butche v Pulp Fiction jsou skutečné hodinky režiséra Tarantina. Film byl natočen za 8 milionů a vydělal 213 milionů.'},
+  {id:'n09',title:'Hvězdné války: Fantomová hrozba',year:1999,imdb:'tt0120915',
+   otazky:[
+    {q:'Jak se jmenuje mladý Anakin Skywalker v Epizodě I?',a:'Jake Lloyd',m:['Hayden Christensen','Jake Lloyd','Ewan McGregor','Liam Neeson']},
+    {q:'Jak se jmenuje záporák s rohy v Epizodě I?',a:'Darth Maul',m:['Darth Vader','Darth Maul','Count Dooku','General Grievous']}
+   ],
+   zajimavost:'George Lucas čekal 16 let než se vrátil k Star Wars. Na premiéru Epizody I fanoušci kempovali před kinema více než 6 měsíců.'},
+  {id:'n10',title:'Matice',year:1999,imdb:'tt0133093',
+   otazky:[
+    {q:'Kolik nabídek odmítly Wachowského sestry před natočením Matice?',a:'Žádné - byl to jejich první film',m:['5 nabídek','Žádné - byl to jejich první film','12 nabídek','Prodaly hned první verzi']},
+    {q:'Kolik sekund trvá slavné "bullet time" otočení kolem Nea?',a:'700 kamer pro 10 sekund',m:['50 kamer pro 2 sekundy','700 kamer pro 10 sekund','100 kamer pro 5 sekund','200 kamer pro 3 sekundy']}
+   ],
+   zajimavost:'Bullet time efekt vyžadoval 120 kamer rozestavěných v kruhu. Keanu Reeves trénoval akrobatiku 4 měsíce každý den.'},
+  {id:'n11',title:'Schindlerův seznam',year:1993,imdb:'tt0108052',
+   otazky:[
+    {q:'Spielberg za Schindlerův seznam dostal Oscara za nejlepší...?',a:'Režii',m:['Scénář','Režii','Film (jako producent)','Kameru']},
+    {q:'V jaké barvě je dívčin kabát v jinak černobílém filmu?',a:'Červené',m:['Žluté','Modré','Červené','Bílé']}
+   ],
+   zajimavost:'Spielberg daroval celý svůj honorář nadaci na vzdělávání o holocaustu. Film točil v Polsku přímo na místech kde se odehrávaly skutečné události.'},
+  {id:'n12',title:'Hvězdné prašivky',year:1995,imdb:'tt0114814',
+   otazky:[
+    {q:'Jak se film "The Usual Suspects" jmenuje česky?',a:'Hvězdné prašivky',m:['Podezřelí','Hvězdné prašivky','Výkupné','Podvod']},
+    {q:'Kdo je Keyser Söze?',a:'To je velké tajemství - sleduj sám!',m:['Detektiv','Terorist','To je velké tajemství - sleduj sám!','Novinář']}
+   ],
+   zajimavost:'Kevin Spacey za roli Verbala Kinta dostal Oscara za nejlepšího herce ve vedlejší roli. Závěrečný twist byl zvolen jedním z nejlepších v historii kina.'},
+  {id:'n13',title:'Ztraceni ve vesmíru',year:1998,imdb:'tt0120738',
+   otazky:[
+    {q:'Kdo hrál Dr. Smithe v Lost in Space (1998)?',a:'Gary Oldman',m:['Gary Oldman','Kevin Spacey','Tim Curry','John Malkovich']},
+    {q:'Na čem je film Lost in Space (1998) založen?',a:'TV seriálu z 60. let',m:['Komiksu','TV seriálu z 60. let','Románu','Skutečné události']}
+   ],
+   zajimavost:'Originální seriál Lost in Space z 60. let byl natolik populární, že NASA pojmenovala jednu vzdělávací misi po jeho robotovi.'},
+  {id:'n14',title:'Home Alone 2',year:1992,imdb:'tt0104431',
+   otazky:[
+    {q:'Kde se Kevin McCallister ztratí v Sám doma 2?',a:'New York',m:['Los Angeles','New York','Chicago','Miami']},
+    {q:'V jakém hotelu bydlí Kevin v Sám doma 2?',a:'Plaza Hotel',m:['Waldorf Astoria','Plaza Hotel','Ritz Carlton','Four Seasons']}
+   ],
+   zajimavost:'Donald Trump si zahrál cameo v Sám doma 2 – ukáže Kevinovi cestu v hotelu Plaza, který tehdy vlastnil.'},
+  {id:'n15',title:'Akademie strašidel',year:1996,imdb:'tt0115734',
+   otazky:[
+    {q:'Jak se jmenuje duch v Casper (1995)?',a:'Casper',m:['Ghost','Casper','Specter','Phantom']},
+    {q:'Kdo daboval Caspera v originále?',a:'Malachi Pearson',m:['Macaulay Culkin','Malachi Pearson','Jake Lloyd','Jonathan Taylor']}
+   ],
+   zajimavost:'Casper byl prvním celovečerním filmem ve kterém byl digitální postava hlavní hvězdou. ILM (Industrial Light & Magic) trávila 13 měsíců vývojem Caspera.'},
+  {id:'n16',title:'Maska',year:1994,imdb:'tt0110475',
+   otazky:[
+    {q:'Kdo hrál Masku (1994)?',a:'Jim Carrey',m:['Jim Carrey','Mike Myers','Adam Sandler','Robin Williams']},
+    {q:'Z čeho pochází moc Masky?',a:'Stará severská maska',m:['Čarodějnický prsten','Stará severská maska','Počítačový virus','Radioaktivní látka']}
+   ],
+   zajimavost:'Jim Carrey strávil 45 minut každý den v maskérně. Zelená barva Masky v CGI záběrech trvala na každý záběr 12 hodin renderování.'},
+  {id:'n17',title:'Hříšný tanec',year:1987,imdb:'tt0092890',
+   otazky:[
+    {q:'V kterém roce se odehrává Hříšný tanec?',a:'1963',m:['1963','1975','1970','1980']},
+    {q:'Jak se jmenuje slavná píseň z Hříšného tance?',a:'I had the Time of My Life',m:['Dancing in the Rain','I had the Time of My Life','Footloose','Physical']}
+   ],
+   zajimavost:'Hříšný tanec byl ve skutečnosti natočen v roce 1986. Patrick Swayze a Jennifer Grey nacvičovali taneční scény 4 měsíce.'},
+  {id:'n18',title:'Sedm',year:1995,imdb:'tt0114369',
+   otazky:[
+    {q:'Kdo hraje detektiva Millse v Sedm?',a:'Brad Pitt',m:['Brad Pitt','Tom Cruise','Denzel Washington','George Clooney']},
+    {q:'Kolik hříchů tvoří základ příběhu Sedm?',a:'7 smrtelných hříchů',m:['5 přikázání','7 smrtelných hříchů','10 přikázání','4 živly']}
+   ],
+   zajimavost:'Brad Pitt si během natáčení sklapl ruku sklem. Zranění bylo tak autentické, že ho scenárista zapracoval přímo do scénáře.'},
+  {id:'n19',title:'GoodFellas',year:1990,imdb:'tt0099685',
+   otazky:[
+    {q:'Kdo režíroval GoodFellas?',a:'Martin Scorsese',m:['Martin Scorsese','Francis Ford Coppola','Brian De Palma','Spike Lee']},
+    {q:'Na základě čeho je GoodFellas?',a:'Skutečného příběhu Henryho Hilla',m:['Románu','Skutečného příběhu Henryho Hilla','Komiksu','TV seriálu']}
+   ],
+   zajimavost:'Záběr s plynulým průchodem restaurací trval 3 minuty bez střihu. Ray Liotta a Joe Pesci neustále improvizovali dialogy.'},
+  {id:'n20',title:'Duch',year:1990,imdb:'tt0099653',
+   otazky:[
+    {q:'Kdo hraje v Ghost (Duch) Sama Wheat?',a:'Patrick Swayze',m:['Patrick Swayze','Tom Hanks','Kevin Costner','Richard Gere']},
+    {q:'Jaká píseň hraje v slavné scéně s hlínou?',a:'Unchained Melody',m:['My Heart Will Go On','Unchained Melody','Take My Breath Away','Every Breath You Take']}
+   ],
+   zajimavost:'Scéna s hrnčířským kruhem se stala ikonickou. Whoopi Goldberg za roli Ody Mae Brown dostala Oscara za nejlepší ženský herecký výkon ve vedlejší roli.'},
+  {id:'n21',title:'Rychle a zběsile',year:2001,imdb:'tt0232500',
+   otazky:[
+    {q:'Kde se odehrává první díl Rychle a zběsile?',a:'Los Angeles',m:['Miami','Los Angeles','New York','Chicago']},
+    {q:'Kdo hraje Dominica Toretto?',a:'Vin Diesel',m:['Vin Diesel','The Rock','Paul Walker','Jason Statham']}
+   ],
+   zajimavost:'Série Rychle a zběsile vydělala celosvětově přes 7 miliard dolarů a stala se jednou z nejúspěšnějších filmových franšíz vůbec.'},
+  {id:'n22',title:'Velký Lebowski',year:1998,imdb:'tt0118715',
+   otazky:[
+    {q:'Jak se jmenuje hlavní postava Velkého Lebowského?',a:'The Dude',m:['The Dude','Big Man','Cool Jeff','Bowling Guy']},
+    {q:'Co miluje The Dude pít?',a:'White Russian',m:['Beer','Whisky','White Russian','Margaritu']}
+   ],
+   zajimavost:'Film byl zpočátku propadák, ale stal se kultovní klasikou. Každý rok se koná festival "Lebowski Fest" kde se fanoušci oblékají jako postavy z filmu.'},
+  {id:'n23',title:'Mlčení jehňátek',year:1991,imdb:'tt0102926',
+   otazky:[
+    {q:'Kdo hraje Hannibala Lectera?',a:'Anthony Hopkins',m:['Anthony Hopkins','Jack Nicholson','Robert De Niro','Al Pacino']},
+    {q:'Kolik minut je Hannibal Lecter celkem na plátně?',a:'Pouze 16 minut',m:['Celou dobu','45 minut','Pouze 16 minut','Přes hodinu']}
+   ],
+   zajimavost:'Anthony Hopkins strávil přípravou na roli měsíce. Přesto je Hannibal Lecter na plátně pouhých 16 minut – a přesto dostal Oscara za hlavní roli.'},
+  {id:'n24',title:'Piráti ze Silexonu',year:1999,imdb:'tt0181523',
+   otazky:[
+    {q:'Office Space je satirou na jaké prostředí?',a:'Kancelářské',m:['Vojenské','Kancelářské','Školní','Nemocniční']},
+    {q:'Kdo režíroval Office Space?',a:'Mike Judge',m:['Mike Judge','Kevin Smith','Judd Apatow','Harold Ramis']}
+   ],
+   zajimavost:'Office Space byl při premiéře propadák. Dnes je ceněnou satikou a věta "Case of the Mondays" vstoupila do populární kultury.'},
+  {id:'n25',title:'Přízrak v temnotách',year:1996,imdb:'tt0117526',
+   otazky:[
+    {q:'The Ghost and the Darkness je o dvou lvech vraždících kde?',a:'Africe – Keňa',m:['Indii','Africe – Keňa','Austrálii','Jihoamerice']},
+    {q:'Na skutečné události z kterého roku je film?',a:'1898',m:['1850','1898','1920','1935']}
+   ],
+   zajimavost:'Skuteční lvi, kteří zabíjeli dělníky při stavbě mostu v Keni v roce 1898, snědli celkem 135 lidí. Jejich vycpaniny jsou vystaveny v muzeu v Chicagu.'},
+  {id:'n26',title:'Braveheart',year:1995,imdb:'tt0112573',
+   otazky:[
+    {q:'Kdo hrál a režíroval Braveheart?',a:'Mel Gibson',m:['Mel Gibson','Russell Crowe','Liam Neeson','Kevin Costner']},
+    {q:'Braveheart získal Oscara za nejlepší film v roce...?',a:'1996',m:['1994','1995','1996','1997']}
+   ],
+   zajimavost:'Bitevní scény v Braverheartovi využívaly irskou armádu jako komparzisty. Gibson obsadil přes 1600 vojáků pro scénu bitvy u Stirlingu.'},
+  {id:'n27',title:'Francouzský polibek',year:1995,imdb:'tt0113098',
+   otazky:[
+    {q:'Kde se odehrává French Kiss?',a:'Francie',m:['Francie','Itálie','Španělsko','Česko']},
+    {q:'Kdo hraje Kate ve French Kiss?',a:'Meg Ryan',m:['Julia Roberts','Meg Ryan','Sandra Bullock','Demi Moore']}
+   ],
+   zajimavost:'Meg Ryan a Kevin Kline spolu hráli ve French Kiss přes 80 scén. Film se stal symbolem romantických komedií 90. let.'},
+  {id:'n28',title:'Ztracený svět',year:1997,imdb:'tt0119567',
+   otazky:[
+    {q:'Ztracený svět je pokračováním kterého filmu?',a:'Jurského parku',m:['Jurského parku','Land Before Time','Dino Park','Prehistoric']}  ,
+    {q:'Jaký dinosaurus dorazí do San Diega?',a:'T-Rex',m:['T-Rex','Velociraptor','Triceratops','Brachiosaurus']}
+   ],
+   zajimavost:'Spielberg natočil Ztracený svět simultánně s Amistadem – střídal natáčení obou filmů ve stejný den.'},
+  {id:'n29',title:'Air Force One',year:1997,imdb:'tt0118571',
+   otazky:[
+    {q:'Kdo hraje prezidenta v Air Force One?',a:'Harrison Ford',m:['Harrison Ford','Bruce Willis','Arnold Schwarzenegger','Mel Gibson']},
+    {q:'Co je Air Force One?',a:'Prezidentské letadlo',m:['Vojenský vrtulník','Prezidentské letadlo','Raketový systém','Tajná základna']}
+   ],
+   zajimavost:'Harrison Ford si vyzkoušel létání na skutečném vojenském letadle. Záběry uvnitř letadla byly natočeny v replice Air Force One postavené ve studiu.'},
+  {id:'n30',title:'Pátek třináctého',year:1999,imdb:'tt0185937',
+   otazky:[
+    {q:'Blair Witch Project byl natočen za kolik dolarů?',a:'60 000 dolarů',m:['500 000','60 000 dolarů','1 milion','5 milionů']},
+    {q:'Blair Witch Project byl jeden z prvních virálních marketingových kampaní - jak?',a:'Falešný web tvrdil že je to skutečné',m:['TV reklamy','Falešný web tvrdil že je to skutečné','Sociální sítě','Billboardy']}
+   ],
+   zajimavost:'The Blair Witch Project vydělal 248 milionů dolarů přesto, že byl natočen za 60 000 dolarů. Herci netušili co se stane – dostávali instrukce každý den v lese.'}
+];
+
+const STUDIA = [
+  // Filmová studia
+  {id:'disney',name:'Disney',emoji:'🏰',barva:'#4488ff',filmy:['a1','a4','a11','a13']},
+  {id:'pixar',name:'Pixar',emoji:'🎭',barva:'#FF6B35',filmy:['a2','a5','a7','a12']},
+  {id:'dreamworks',name:'DreamWorks',emoji:'🐉',barva:'#7cb518',filmy:['a6','a10','a3','a8']},
+  {id:'illumination',name:'Illumination',emoji:'🎤',barva:'#FFD60A',filmy:['a15','a14','a9']},
+  // Televizní stanice / platformy
+  {id:'nickelodeon',name:'Nickelodeon',emoji:'🟠',barva:'#FF6600',filmy:['s1','s2','s3','s5']},
+  {id:'cartoon_network',name:'Cartoon Network',emoji:'📺',barva:'#CC0000',filmy:['s4','s6']},
+  {id:'disney_channel',name:'Disney Channel',emoji:'✨',barva:'#1a90ff',filmy:['s8','s9','s10']},
+  {id:'netflix',name:'Netflix',emoji:'🎬',barva:'#E50914',filmy:['s7','s11']}
+];
+
+const HRY_DEF = [
+  {id:'sibenice',emoji:'🍿',name:'Hádej film',desc:'Hádej název písmeno po písmenu!'},
+  {id:'puzzle',emoji:'🧩',name:'Puzzle',desc:'Slož plakát z 9 dílků!'},
+  {id:'pexeso',emoji:'🃏',name:'Pexeso',desc:'Najdi dvojice plakátů!'},
+  {id:'omalov',emoji:'🖍️',name:'Omalovánky',desc:'Vybarvi filmovou postavu!'}
+];
+
+const OMAL_BARVY = [
+  // Řada 1: základní a teplé barvy
+  '#e81c3a', // červená
+  '#ff8c00', // oranžová
+  '#f5c842', // žlutá
+  '#7cb518', // zelená
+  '#00a0c8', // tyrkysová
+  '#4488ff', // modrá
+  '#9b59b6', // fialová
+  '#ff44aa', // růžová
+  // Řada 2: příroda, pleť, neutrální
+  '#87ceeb', // nebe / voda
+  '#8b4513', // hnědá
+  '#c68642', // zlatohnědá / Simba
+  '#f5cba7', // světlá pleť
+  '#ffffff', // bílá
+  '#bbbbbb', // světle šedá
+  '#555555', // tmavě šedá
+  '#111111'  // černá
+];
+const OMAL_POSTAVY = [
+  {name:'Jednorožec',emoji:'🦄',barva:'#ff44aa',vw:400,vh:520,seg:[
+    {id:'obloha',l:'Obloha',d:'M0,0 H400 V280 Q300,298 200,294 Q100,298 0,280 Z'},
+    {id:'duha_a',l:'Duha červená',d:'M5,282 Q200,-15 395,282 Q387,280 378,277 Q200,5 22,277 Q14,280 5,282 Z'},
+    {id:'duha_b',l:'Duha oranžová',d:'M22,278 Q200,5 378,278 Q370,275 362,272 Q200,22 38,272 Q30,275 22,278 Z'},
+    {id:'duha_c',l:'Duha žlutá',d:'M38,272 Q200,22 362,272 Q354,270 346,267 Q200,38 54,267 Q46,270 38,272 Z'},
+    {id:'mrak1',l:'Mrak vlevo',d:'M18,88 Q24,64 50,70 Q60,48 88,56 Q108,42 126,56 Q142,44 158,58 Q166,74 152,86 Q126,97 90,95 Q54,97 36,86 Q16,84 18,88 Z'},
+    {id:'mrak2',l:'Mrak vpravo',d:'M242,72 Q250,50 278,58 Q292,40 316,49 Q334,37 354,50 Q366,65 354,78 Q330,89 298,87 Q268,89 250,78 Q238,74 242,72 Z'},
+    {id:'kopce',l:'Vzdálené kopce',d:'M0,260 Q70,230 140,248 Q200,232 265,246 Q335,228 400,246 L400,282 Q300,298 200,294 Q100,298 0,282 Z'},
+    {id:'zeme',l:'Zelená louka',d:'M0,280 Q100,298 200,294 Q300,298 400,280 L400,520 H0 Z'},
+    {id:'telo',l:'Tělo jednorožce',d:'M115,358 Q98,314 106,274 Q118,246 148,236 Q172,226 200,228 Q228,226 252,236 Q282,246 294,274 Q302,314 285,358 Q270,396 242,410 Q222,419 200,420 Q178,419 158,410 Q130,396 115,358 Z'},
+    {id:'krk',l:'Krk',d:'M172,242 Q178,212 192,202 Q200,196 208,202 Q222,212 228,242 Q215,234 200,232 Q185,234 172,242 Z'},
+    {id:'hlava',l:'Hlava',d:'M164,207 Q158,168 174,145 Q186,124 200,120 Q214,124 226,145 Q242,168 236,207 Q222,218 200,220 Q178,218 164,207 Z'},
+    {id:'rypak',l:'Čumák',d:'M180,190 Q183,205 200,208 Q217,205 220,190 Q216,176 200,173 Q184,176 180,190 Z'},
+    {id:'ucho_l',l:'Levé ucho',d:'M168,150 Q160,124 174,112 Q184,106 190,120 Q188,136 180,150 Z'},
+    {id:'ucho_p',l:'Pravé ucho',d:'M232,150 Q240,124 226,112 Q216,106 210,120 Q212,136 220,150 Z'},
+    {id:'roh',l:'Roh',d:'M192,120 L178,46 Q184,38 192,36 L208,36 Q216,38 222,46 L208,120 Z'},
+    {id:'roh_zluta',l:'Roh spirála',d:'M195,112 L184,58 Q188,52 194,50 L206,50 Q212,52 216,58 L205,112 Z'},
+    {id:'hriva_1',l:'Hříva pramen 1',d:'M228,150 Q265,138 278,165 Q290,192 275,222 Q262,234 248,238 Q266,218 268,196 Q270,170 252,156 Q244,148 236,156 Q232,172 235,194 Q237,210 228,224 Q218,211 220,192 Q218,166 228,150 Z'},
+    {id:'hriva_2',l:'Hříva pramen 2',d:'M238,160 Q260,155 266,178 Q270,200 258,218 Q250,226 242,224 Q255,210 255,194 Q253,176 242,168 Q236,175 238,192 Q238,206 231,220 Q222,208 224,192 Q221,172 234,160 Z'},
+    {id:'chvost',l:'Ocas',d:'M285,356 Q322,342 338,312 Q350,285 340,260 Q326,274 318,300 Q330,278 320,256 Q307,270 303,294 Q308,270 294,254 Q283,270 284,298 Q286,322 280,348 Z'},
+    {id:'noha_pl',l:'Přední levá noha',d:'M143,408 Q136,432 133,458 Q131,474 140,478 Q152,482 162,478 Q169,474 169,458 L165,416 Z'},
+    {id:'noha_pp',l:'Přední pravá noha',d:'M242,408 Q250,432 252,458 Q254,474 246,478 Q234,482 224,478 Q217,474 217,458 L221,416 Z'},
+    {id:'noha_zl',l:'Zadní levá noha',d:'M128,396 Q120,420 118,450 Q116,468 126,472 Q136,476 147,472 Q154,468 154,450 L152,406 Z'},
+    {id:'noha_zp',l:'Zadní pravá noha',d:'M272,396 Q280,420 282,450 Q284,468 274,472 Q264,476 253,472 Q246,468 246,450 L248,406 Z'},
+    {id:'kvet1',l:'Květ 1',d:'M52,432 Q40,416 50,404 Q58,394 68,402 Q78,394 86,404 Q96,418 86,432 Q78,443 68,440 Q58,443 52,432 Z M68,434 Q60,428 60,420 Q60,412 68,408 Q76,412 76,420 Q76,428 68,434 Z'},
+    {id:'kvet2',l:'Květ 2',d:'M318,446 Q306,430 316,418 Q324,408 335,416 Q346,408 354,418 Q364,432 352,446 Q343,457 334,453 Q325,457 318,446 Z M334,448 Q326,442 326,434 Q326,426 334,422 Q342,426 342,434 Q342,442 334,448 Z'},
+    {id:'kvet3',l:'Květ 3',d:'M185,498 Q178,487 184,480 Q190,473 198,478 Q206,473 212,480 Q218,490 212,498 Q206,505 198,502 Q190,505 185,498 Z'},
+    {id:'trava_v',l:'Tráva výzdoba',d:'M8,298 Q14,280 20,298 M32,293 Q40,272 48,293 M352,296 Q360,274 368,296 M378,300 Q386,280 394,300 M90,500 Q96,485 102,500 M290,495 Q297,478 304,495'}
+  ]},
+  {name:'Motýl',emoji:'🦋',barva:'#9b59b6',vw:400,vh:520,seg:[
+    {id:'obloha',l:'Obloha',d:'M0,0 H400 V300 Q300,316 200,312 Q100,316 0,300 Z'},
+    {id:'slunce',l:'Slunce',d:'M330,65 Q348,55 360,65 Q372,55 384,65 Q390,78 382,90 Q372,100 360,96 Q348,100 336,90 Q328,78 330,65 Z M360,82 Q352,75 352,68 Q352,60 360,57 Q368,60 368,68 Q368,75 360,82 Z'},
+    {id:'oblacek',l:'Obláček',d:'M42,75 Q52,55 75,62 Q88,45 108,54 Q122,42 138,56 Q148,68 136,80 Q115,91 82,89 Q50,91 38,80 Z'},
+    {id:'mrak2',l:'Obláček 2',d:'M265,48 Q278,32 300,40 Q316,26 336,36 Q350,26 362,40 Q370,55 358,66 Q336,76 306,74 Q278,76 262,66 Z'},
+    {id:'trava',l:'Tráva a louka',d:'M0,300 Q100,316 200,312 Q300,316 400,300 L400,520 H0 Z'},
+    {id:'stonek1',l:'Stonek levý',d:'M72,510 Q68,460 70,420 Q72,400 76,390 Q80,400 82,420 Q84,460 80,510 Z'},
+    {id:'list1_l',l:'List levý',d:'M70,430 Q45,415 38,398 Q48,388 65,395 Q70,408 70,430 Z'},
+    {id:'list1_p',l:'List pravý',d:'M76,430 Q102,415 108,398 Q98,388 80,395 Q76,408 76,430 Z'},
+    {id:'kvet_v1_p1',l:'Velký květ vlevo plátky',d:'M76,385 Q56,362 68,344 Q80,330 96,342 Q108,330 120,344 Q130,362 110,382 Q100,392 88,388 Q76,392 68,382 Z'},
+    {id:'kvet_v1_str',l:'Velký květ střed',d:'M96,368 Q85,360 85,350 Q85,340 96,337 Q107,340 107,350 Q107,360 96,368 Z'},
+    {id:'stonek2',l:'Stonek pravý',d:'M320,510 Q322,455 318,415 Q316,396 320,384 Q325,396 328,415 Q330,455 330,510 Z'},
+    {id:'kvet_v2_p1',l:'Velký květ vpravo plátky',d:'M322,380 Q300,358 312,340 Q324,326 338,340 Q350,326 364,340 Q374,358 354,378 Q342,390 332,386 Q320,390 310,380 Z'},
+    {id:'kvet_v2_str',l:'Velký květ vpravo střed',d:'M332,362 Q322,354 322,344 Q322,334 332,331 Q342,334 342,344 Q342,354 332,362 Z'},
+    {id:'kridlo_ph',l:'Pravé horní křídlo',d:'M214,230 Q275,175 340,155 Q385,142 395,168 Q400,195 378,222 Q355,248 315,260 Q280,270 255,268 Q234,262 225,250 Q218,240 214,230 Z'},
+    {id:'kridlo_pd',l:'Pravé dolní křídlo',d:'M218,252 Q270,275 315,305 Q350,328 355,355 Q358,375 340,380 Q315,385 290,368 Q265,348 248,315 Q232,282 224,262 Z'},
+    {id:'kridlo_lh',l:'Levé horní křídlo',d:'M186,230 Q125,175 60,155 Q15,142 5,168 Q0,195 22,222 Q45,248 85,260 Q120,270 145,268 Q166,262 175,250 Q182,240 186,230 Z'},
+    {id:'kridlo_ld',l:'Levé dolní křídlo',d:'M182,252 Q130,275 85,305 Q50,328 45,355 Q42,375 60,380 Q85,385 110,368 Q135,348 152,315 Q168,282 176,262 Z'},
+    {id:'kridlo_ph_vz',l:'Pravé horní křídlo vzor',d:'M280,220 Q310,195 340,185 Q365,178 375,195 Q380,210 365,225 Q345,238 318,240 Q295,240 280,230 Z M290,225 Q308,210 326,205 Q342,202 348,212 Q345,222 330,228 Q312,230 295,228 Z'},
+    {id:'kridlo_lh_vz',l:'Levé horní křídlo vzor',d:'M120,220 Q90,195 60,185 Q35,178 25,195 Q20,210 35,225 Q55,238 82,240 Q105,240 120,230 Z M110,225 Q92,210 74,205 Q58,202 52,212 Q55,222 70,228 Q88,230 105,228 Z'},
+    {id:'kridlo_pd_vz',l:'Pravé dolní křídlo vzor',d:'M278,295 Q302,316 320,342 Q332,362 326,378 Q310,383 294,368 Q276,348 266,318 Q260,300 266,288 Z'},
+    {id:'kridlo_ld_vz',l:'Levé dolní křídlo vzor',d:'M122,295 Q98,316 80,342 Q68,362 74,378 Q90,383 106,368 Q124,348 134,318 Q140,300 134,288 Z'},
+    {id:'telo',l:'Tělo motýla',d:'M194,198 Q185,222 185,248 Q185,275 192,298 Q196,310 200,312 Q204,310 208,298 Q215,275 215,248 Q215,222 206,198 Q203,188 200,186 Q197,188 194,198 Z'},
+    {id:'hlava',l:'Hlava motýla',d:'M185,188 Q180,168 186,155 Q193,144 200,142 Q207,144 214,155 Q220,168 215,188 Q210,180 200,178 Q190,180 185,188 Z'},
+    {id:'tykadlo_l',l:'Tykadlo levé',d:'M191,145 Q176,118 162,100 Q155,90 160,86 Q165,84 170,88 Q178,96 188,120 Q192,138 192,148 Z M158,88 Q152,82 148,84 Q144,88 148,96 Q156,98 160,92 Z'},
+    {id:'tykadlo_p',l:'Tykadlo pravé',d:'M209,145 Q224,118 238,100 Q245,90 240,86 Q235,84 230,88 Q222,96 212,120 Q208,138 208,148 Z M242,88 Q248,82 252,84 Q256,88 252,96 Q244,98 240,92 Z'},
+    {id:'kvety_dole',l:'Drobné kvítky',d:'M155,498 Q146,488 150,478 Q156,470 163,476 Q170,470 176,478 Q180,490 172,498 Q165,507 158,504 Q150,507 145,498 Z M240,492 Q232,482 236,472 Q242,464 249,470 Q256,464 262,472 Q266,484 258,492 Q251,501 244,498 Q236,501 232,492 Z'}
+  ]},
+  {name:'Mořská víla',emoji:'🧜',barva:'#00a0c8',vw:400,vh:520,seg:[
+    {id:'more',l:'Mořské pozadí',d:'M0,0 H400 V520 H0 Z'},
+    {id:'hloubka',l:'Hlubší voda',d:'M0,280 H400 V520 H0 Z'},
+    {id:'piscek',l:'Písečné dno',d:'M0,440 Q100,425 200,428 Q300,425 400,440 L400,520 H0 Z'},
+    {id:'koral1',l:'Korál vlevo',d:'M55,445 Q42,415 45,385 Q48,360 58,350 Q68,360 75,385 Q80,415 68,445 Z M42,400 Q30,385 32,370 Q40,362 50,370 Q55,385 52,400 Z M68,395 Q80,380 82,365 Q78,355 68,363 Q60,378 60,395 Z'},
+    {id:'koral2',l:'Korál vpravo',d:'M340,442 Q326,412 328,382 Q332,355 342,345 Q352,355 358,382 Q362,412 350,442 Z M325,396 Q312,380 314,364 Q322,356 332,364 Q338,380 335,396 Z M352,392 Q364,376 366,360 Q362,350 352,358 Q344,374 344,392 Z'},
+    {id:'ricasy1',l:'Řasy vlevo',d:'M28,520 Q22,490 28,465 Q34,450 40,460 Q46,475 42,500 Q38,516 30,520 Z M16,520 Q8,495 12,468 Q17,452 24,462 Q30,478 26,504 Q22,518 16,520 Z'},
+    {id:'ricasy2',l:'Řasy vpravo',d:'M370,520 Q364,490 370,465 Q376,450 382,460 Q388,475 384,500 Q380,516 372,520 Z M382,520 Q378,494 384,468 Q390,452 396,462 Q400,475 398,500 L400,520 Z'},
+    {id:'morsky_konik',l:'Mořský koník',d:'M330,250 Q342,238 348,222 Q354,205 348,192 Q340,180 330,182 Q320,180 314,192 Q308,205 314,222 Q320,236 326,248 Q322,258 318,270 Q315,282 316,295 Q318,308 326,315 Q320,325 316,338 Q312,350 318,358 Q325,365 333,358 Q338,350 336,338 Q332,328 328,318 Q336,310 340,298 Q344,285 342,272 Q340,260 333,252 Z M344,195 Q356,185 360,192 Q358,205 348,210 Z'},
+    {id:'bubliny',l:'Bubliny',d:'M90,200 Q80,190 82,178 Q90,168 100,172 Q110,168 116,178 Q118,192 108,200 Q100,207 92,204 Z M140,140 Q132,130 134,118 Q142,108 152,112 Q162,108 167,120 Q168,134 158,140 Q150,147 142,144 Z M82,120 Q76,110 78,100 Q85,92 93,95 Q101,92 105,100 Q107,112 100,120 Q93,127 85,124 Z M160,280 Q154,270 156,260 Q163,252 171,256 Q179,252 183,262 Q184,274 178,280 Q171,287 163,284 Z'},
+    {id:'ryba1',l:'Rybička',d:'M350,168 Q335,162 325,170 Q320,178 325,186 Q335,193 350,188 Q358,195 364,192 Q366,184 360,178 Q358,170 350,168 Z M350,172 Q344,168 344,178 Q344,188 350,184 Q356,180 356,174 Z M362,180 Q369,175 374,178 Q376,183 372,186 Q367,186 362,182 Z'},
+    {id:'ryba2',l:'Rybička 2',d:'M62,310 Q50,305 42,313 Q38,320 42,328 Q52,334 64,330 Q72,336 77,332 Q79,325 74,318 Q72,310 62,310 Z M62,314 Q56,310 56,320 Q56,329 62,326 Q68,322 68,316 Z M74,320 Q80,316 84,319 Q86,324 82,327 Q77,327 73,323 Z'},
+    {id:'ocasni_ploutev',l:'Ocasní ploutev',d:'M172,460 Q152,445 138,425 Q130,408 136,398 Q146,390 158,400 Q165,390 170,382 Q175,372 178,360 Q182,372 185,382 Q190,392 196,400 Q206,390 218,398 Q224,408 218,425 Q205,445 188,460 Q180,468 172,460 Z M152,448 Q140,432 142,418 Q150,408 162,416 Q165,430 162,448 Z M196,448 Q205,432 204,418 Q196,408 184,416 Q181,430 184,448 Z'},
+    {id:'rep_ploutev',l:'Malá ploutev',d:'M178,355 Q168,338 170,322 Q176,312 186,318 Q192,308 200,312 Q208,308 214,318 Q220,312 228,322 Q230,338 220,355 Q212,362 200,358 Q188,362 178,355 Z'},
+    {id:'telo',l:'Rybí tělo',d:'M165,358 Q152,325 155,292 Q158,265 170,248 Q180,234 192,228 Q196,226 200,225 Q204,226 208,228 Q220,234 230,248 Q242,265 245,292 Q248,325 235,358 Q222,378 200,382 Q178,378 165,358 Z'},
+    {id:'trup',l:'Trup',d:'M180,225 Q172,198 174,172 Q178,148 190,136 Q196,130 200,128 Q204,130 210,136 Q222,148 226,172 Q228,198 220,225 Q212,218 200,216 Q188,218 180,225 Z'},
+    {id:'vlasy',l:'Vlasy',d:'M172,135 Q155,118 150,98 Q148,80 158,72 Q168,65 178,75 Q186,65 196,62 Q204,60 208,62 Q218,65 224,75 Q232,65 242,72 Q252,80 250,98 Q245,118 228,135 Q215,145 200,147 Q185,145 172,135 Z M160,85 Q155,75 162,70 Q170,68 174,78 Q178,68 188,66 Q195,65 200,68 Q205,65 212,66 Q222,68 226,78 Q230,68 238,70 Q246,75 240,85 Q228,95 200,97 Q172,95 160,85 Z'},
+    {id:'hlava',l:'Tvář',d:'M178,170 Q172,148 176,132 Q182,118 192,112 Q196,110 200,109 Q204,110 208,112 Q218,118 224,132 Q228,148 222,170 Q215,180 200,182 Q185,180 178,170 Z'},
+    {id:'ruky',l:'Ruce',d:'M170,268 Q152,258 142,242 Q136,228 142,218 Q150,210 160,218 Q168,226 170,242 Q172,256 170,268 Z M230,268 Q248,258 258,242 Q264,228 258,218 Q250,210 240,218 Q232,226 230,242 Q228,256 230,268 Z'},
+    {id:'koruna',l:'Koruna',d:'M188,112 Q182,98 185,84 Q192,76 200,82 Q208,76 215,84 Q218,98 212,112 Q206,104 200,102 Q194,104 188,112 Z M180,90 Q175,80 178,72 Q185,66 190,72 Q188,80 185,90 Z M220,90 Q225,80 222,72 Q215,66 210,72 Q212,80 215,90 Z'},
+    {id:'vlas_zel',l:'Mořské vlasy',d:'M168,138 Q150,125 148,108 Q150,90 162,86 Q168,96 165,112 Q166,125 172,136 Z M232,138 Q250,125 252,108 Q250,90 238,86 Q232,96 235,112 Q234,125 228,136 Z M160,130 Q142,118 140,100 Q142,85 154,80 Q160,90 158,106 Q160,120 166,130 Z M240,130 Q258,118 260,100 Q258,85 246,80 Q240,90 242,106 Q240,120 234,130 Z'},
+    {id:'muse',l:'Mušle dno',d:'M80,468 Q70,455 74,444 Q82,436 92,442 Q100,436 108,444 Q112,458 104,468 Q96,478 88,475 Q80,478 74,468 Z M88,466 Q80,460 80,452 Q80,444 88,441 Q96,444 96,452 Q96,460 88,466 Z M295,472 Q285,459 289,448 Q297,440 307,446 Q315,440 323,448 Q327,462 319,472 Q311,482 303,479 Q295,482 289,472 Z M303,470 Q295,464 295,456 Q295,448 303,445 Q311,448 311,456 Q311,464 303,470 Z'}
+  ]},
+  {name:'Dinosaurus',emoji:'🦕',barva:'#7cb518',vw:400,vh:520,seg:[
+    {id:'obloha',l:'Obloha',d:'M0,0 H400 V310 Q300,326 200,322 Q100,326 0,310 Z'},
+    {id:'sopka',l:'Sopka v pozadí',d:'M300,180 L268,312 Q290,322 330,318 Q368,314 380,310 Z M310,180 Q315,160 325,152 Q328,160 320,180 Z M295,188 L292,280 Q300,278 302,260 Z'},
+    {id:'oblak_sopka',l:'Kouř ze sopky',d:'M318,155 Q308,138 315,125 Q325,115 335,122 Q340,112 350,118 Q358,128 352,140 Q345,150 335,148 Q328,155 320,155 Z'},
+    {id:'hory',l:'Vzdálené hory',d:'M0,270 Q50,238 100,255 Q150,240 200,258 Q250,240 305,252 Q350,238 400,255 L400,315 Q300,330 200,326 Q100,330 0,315 Z'},
+    {id:'zeme',l:'Půda',d:'M0,308 Q100,326 200,322 Q300,326 400,308 L400,520 H0 Z'},
+    {id:'kapradina1',l:'Kapradina vlevo',d:'M25,312 Q15,285 20,268 Q28,258 36,268 Q30,280 32,300 Q55,275 50,255 Q58,248 66,256 Q62,272 45,295 Q68,270 65,250 Q74,244 80,254 Q76,272 55,298 Q72,278 72,258 Q80,252 86,262 Q82,280 62,308 Z'},
+    {id:'kapradina2',l:'Kapradina vpravo',d:'M375,308 Q385,280 380,262 Q372,252 364,262 Q370,276 368,298 Q345,272 350,252 Q342,246 336,254 Q340,270 357,294 Q334,270 338,250 Q328,244 323,254 Q327,272 347,298 Q330,278 330,258 Q322,252 316,262 Q320,280 340,310 Z'},
+    {id:'telo',l:'Tělo dinosaura',d:'M125,355 Q108,318 112,280 Q118,250 138,238 Q152,228 168,225 Q178,222 185,225 Q190,235 186,248 Q195,235 205,228 Q218,225 232,230 Q255,242 272,265 Q290,290 292,325 Q294,358 282,388 Q268,415 248,428 Q228,440 205,445 Q182,445 160,438 Q138,428 126,408 Q112,388 125,355 Z'},
+    {id:'hlava',l:'Hlava',d:'M110,260 Q95,240 92,215 Q90,192 100,175 Q112,158 128,153 Q145,148 162,155 Q178,162 185,178 Q192,162 188,145 Q196,138 208,142 Q210,160 204,178 Q212,165 222,158 Q235,154 248,162 Q260,172 264,188 Q268,205 264,222 Q258,240 245,255 Q228,270 210,272 Q196,274 185,268 Q174,274 160,272 Q140,268 125,258 Z'},
+    {id:'celist_dolni',l:'Spodní čelist',d:'M100,255 Q108,272 125,280 Q145,288 165,285 Q185,282 198,275 Q212,282 228,285 Q248,288 268,280 Q282,272 290,255 Q278,265 262,270 Q245,275 228,272 Q212,275 200,270 Q188,275 172,272 Q155,275 135,270 Q118,265 100,255 Z'},
+    {id:'zuby',l:'Zuby',d:'M115,270 Q118,280 124,275 Q126,265 122,260 Z M132,280 Q135,290 141,285 Q143,275 139,268 Z M152,282 Q155,292 161,287 Q163,277 159,270 Z M172,278 Q175,288 181,283 Q183,273 179,266 Z M224,278 Q222,288 216,283 Q214,273 218,266 Z M243,282 Q241,292 235,287 Q233,277 237,270 Z M262,278 Q260,288 254,283 Q252,273 256,266 Z M277,268 Q275,278 270,273 Q268,263 272,256 Z'},
+    {id:'oko1',l:'Oko levé',d:'M135,215 Q126,205 128,195 Q135,186 145,190 Q154,186 160,195 Q162,206 155,215 Q148,222 142,220 Q136,222 135,215 Z M142,210 Q136,205 136,198 Q136,192 142,189 Q148,192 148,198 Q148,205 142,210 Z'},
+    {id:'oko2',l:'Oko pravé',d:'M245,215 Q236,205 238,195 Q245,186 255,190 Q264,186 270,195 Q272,206 265,215 Q258,222 252,220 Q246,222 245,215 Z M252,210 Q246,205 246,198 Q246,192 252,189 Q258,192 258,198 Q258,205 252,210 Z'},
+    {id:'chripek',l:'Chřípí',d:'M165,178 Q160,172 162,164 Q168,158 175,162 Q178,155 182,162 Q184,170 178,178 Z M220,178 Q215,170 217,162 Q222,155 226,162 Q230,158 235,162 Q237,170 232,178 Z'},
+    {id:'hrboly',l:'Hřbetní hroty',d:'M185,225 L178,188 Q182,180 188,182 Q192,188 190,200 Z M205,222 L202,180 Q206,172 212,174 Q216,180 212,195 Z M228,232 Q228,215 238,200 Q244,192 250,196 Q252,208 248,225 Z'},
+    {id:'noha_pl',l:'Přední levá noha',d:'M135,440 Q124,462 118,488 Q115,505 124,510 Q136,514 148,510 Q158,505 158,488 L155,448 Z M118,505 Q110,510 115,517 Q120,520 130,517 Q135,512 128,508 Z M148,508 Q155,512 158,520 Q152,520 148,516 Q142,512 142,508 Z'},
+    {id:'noha_zl',l:'Zadní levá noha',d:'M158,438 Q145,462 140,490 Q137,508 146,513 Q158,517 170,513 Q180,508 180,490 L176,445 Z'},
+    {id:'noha_zp',l:'Zadní pravá noha',d:'M252,438 Q265,462 270,490 Q273,508 264,513 Q252,517 240,513 Q230,508 230,490 L234,445 Z'},
+    {id:'ocas',l:'Ocas',d:'M280,390 Q315,372 335,345 Q352,318 348,292 Q340,268 325,265 Q318,282 322,308 Q326,285 315,268 Q305,278 305,305 Q310,280 298,265 Q288,275 290,305 Q292,328 285,358 Q282,375 280,392 Z'},
+    {id:'puncky',l:'Tečky na těle',d:'M155,295 Q148,288 150,280 Q157,274 165,278 Q172,274 178,280 Q180,290 174,296 Q168,303 162,300 Z M222,290 Q215,283 217,275 Q224,269 232,273 Q240,269 245,277 Q247,287 241,293 Q235,300 228,297 Z M190,340 Q183,333 185,325 Q192,319 200,323 Q208,319 213,327 Q215,337 209,343 Q203,350 197,347 Z'}
+  ]},
+  {name:'Raketa ve vesmíru',emoji:'🚀',barva:'#4488ff',vw:400,vh:520,seg:[
+    {id:'pozadi',l:'Vesmír',d:'M0,0 H400 V520 H0 Z'},
+    {id:'mlhovina',l:'Mlhovina',d:'M0,80 Q80,40 160,70 Q240,40 320,68 Q380,50 400,80 L400,200 Q320,170 240,195 Q160,168 80,192 Q40,178 0,200 Z'},
+    {id:'planeta1',l:'Velká planeta vlevo',d:'M-20,380 Q20,310 95,305 Q170,300 205,370 Q220,410 195,455 Q165,490 110,495 Q55,498 18,462 Q-15,428 -20,380 Z M20,360 Q50,330 90,326 Q130,322 154,358 Q162,385 148,412 Q130,432 100,436 Q70,440 48,418 Q24,395 20,360 Z'},
+    {id:'planeta2',l:'Malá planeta vpravo',d:'M340,40 Q370,28 392,45 Q408,65 400,90 Q390,112 368,118 Q344,124 326,106 Q308,88 315,62 Q322,40 340,40 Z M345,55 Q362,46 376,56 Q388,68 383,84 Q376,98 362,102 Q348,106 338,94 Q326,80 332,64 Q336,54 345,55 Z'},
+    {id:'kometa',l:'Kometa',d:'M355,200 Q380,215 392,236 Q398,252 392,265 Q382,275 368,270 Q355,265 348,248 Q342,230 348,215 Z M345,255 Q330,262 318,270 Q305,275 295,270 Q302,260 315,255 Q328,250 340,252 Z M348,252 Q334,258 320,265 Q308,272 296,268 Q295,260 306,252 Q318,248 334,248 Z'},
+    {id:'hvezdy',l:'Hvězdy velké',d:'M42,48 Q44,42 50,42 Q56,42 58,48 Q63,52 58,56 Q56,62 50,62 Q44,62 42,56 Q37,52 42,48 Z M310,150 Q312,144 318,144 Q324,144 326,150 Q331,154 326,158 Q324,164 318,164 Q312,164 310,158 Q305,154 310,150 Z M28,200 Q30,196 34,196 Q38,196 40,200 Q43,204 40,208 Q38,212 34,212 Q30,212 28,208 Q25,204 28,200 Z M360,320 Q362,316 366,316 Q370,316 372,320 Q375,324 372,328 Q370,332 366,332 Q362,332 360,328 Q357,324 360,320 Z M75,290 Q77,286 81,286 Q85,286 87,290 Q90,294 87,298 Q85,302 81,302 Q77,302 75,298 Q72,294 75,290 Z'},
+    {id:'prstencova_planeta',l:'Prsten planety',d:'M55,335 Q80,318 115,315 Q150,312 180,330 M180,370 Q155,387 115,389 Q75,391 48,372 Q30,355 35,338 Q45,322 75,316 Q108,310 142,318 Q172,326 188,350 Q194,374 180,394 Q165,412 140,416 Q108,420 80,408 Q52,394 44,368 Q38,344 52,326 Q65,310 98,305 Q132,300 162,316 Q190,332 198,360 Q205,390 188,414'},
+    {id:'raketa_trup',l:'Trup rakety',d:'M185,145 Q180,168 178,198 Q176,228 178,262 Q180,295 188,318 Q196,335 200,338 Q204,335 212,318 Q220,295 222,262 Q224,228 222,198 Q220,168 215,145 Z'},
+    {id:'raketa_nos',l:'Nos rakety',d:'M180,145 Q185,108 192,82 Q196,62 200,55 Q204,62 208,82 Q215,108 220,145 Z'},
+    {id:'raketa_okno',l:'Okno',d:'M184,210 Q180,195 184,182 Q190,172 200,170 Q210,172 216,182 Q220,195 216,210 Q210,220 200,222 Q190,220 184,210 Z M186,205 Q183,195 186,185 Q192,178 200,176 Q208,178 214,185 Q217,196 214,206 Q208,215 200,217 Q192,215 186,205 Z'},
+    {id:'raketa_kridelko_l',l:'Křidélko levé',d:'M178,265 Q155,268 138,282 Q124,295 125,315 Q128,330 140,335 Q152,338 165,330 Q175,322 180,308 Q182,290 180,268 Z'},
+    {id:'raketa_kridelko_p',l:'Křidélko pravé',d:'M222,265 Q245,268 262,282 Q276,295 275,315 Q272,330 260,335 Q248,338 235,330 Q225,322 220,308 Q218,290 220,268 Z'},
+    {id:'raketa_plamen1',l:'Plamen 1',d:'M190,335 Q182,358 178,380 Q175,400 182,415 Q190,425 200,428 Q210,425 218,415 Q225,400 222,380 Q218,358 210,335 Z'},
+    {id:'raketa_plamen2',l:'Plamen 2',d:'M192,340 Q186,362 185,384 Q186,402 192,412 Q196,418 200,420 Q204,418 208,412 Q214,402 215,384 Q214,362 208,340 Z'},
+    {id:'hvezdicka1',l:'Hvězdičky malé',d:'M148,105 L153,118 L165,118 L155,127 L159,140 L148,132 L137,140 L141,127 L131,118 L143,118 Z M258,80 L263,93 L275,93 L265,102 L269,115 L258,107 L247,115 L251,102 L241,93 L253,93 Z'},
+    {id:'mesic',l:'Půlměsíc',d:'M88,108 Q75,95 75,78 Q75,52 95,40 Q105,35 116,38 Q105,48 100,62 Q96,76 100,90 Q104,102 116,108 Q105,113 95,112 Q90,111 88,108 Z'},
+    {id:'astronaut',l:'Astronaut v okně',d:'M192,185 Q190,178 192,172 Q196,168 200,167 Q204,168 208,172 Q210,178 208,185 Q206,190 200,191 Q194,190 192,185 Z M195,175 Q193,170 196,167 Q200,165 204,167 Q207,170 205,175 Q202,178 198,178 Z'}
+  ]},
+  {name:'Robot',emoji:'🤖',barva:'#888',vw:400,vh:520,seg:[
+    {id:'zed',l:'Stěna továrny',d:'M0,0 H400 V380 Q300,395 200,392 Q100,395 0,380 Z'},
+    {id:'okno1',l:'Okno vlevo',d:'M25,40 H100 V115 H25 Z M30,46 H95 V109 H30 Z'},
+    {id:'okno2',l:'Okno vpravo',d:'M300,40 H375 V115 H300 Z M305,46 H370 V109 H305 Z'},
+    {id:'kabel1',l:'Kabel vlevo',d:'M15,200 Q8,240 12,280 Q16,310 10,340 Q14,350 20,350 Q26,350 28,340 Q22,310 26,280 Q30,240 22,200 Z'},
+    {id:'kabel2',l:'Kabel vpravo',d:'M385,195 Q392,238 388,275 Q384,308 390,338 Q386,350 380,350 Q374,350 372,338 Q378,308 374,275 Q370,238 378,195 Z'},
+    {id:'ozubeni1',l:'Ozubené kolo vlevo',d:'M38,155 Q28,143 30,128 Q32,112 45,108 Q58,104 68,115 Q78,104 88,112 Q94,128 86,143 Q78,158 62,158 Q46,158 38,155 Z M62,148 Q52,142 50,132 Q50,122 60,118 Q70,122 70,132 Q68,142 62,148 Z'},
+    {id:'ozubeni2',l:'Ozubené kolo vpravo',d:'M312,155 Q302,143 304,128 Q306,112 319,108 Q332,104 342,115 Q352,104 362,112 Q368,128 360,143 Q352,158 336,158 Q320,158 312,155 Z M336,148 Q326,142 324,132 Q324,122 334,118 Q344,122 344,132 Q342,142 336,148 Z'},
+    {id:'podlaha',l:'Podlaha',d:'M0,378 Q100,395 200,392 Q300,395 400,378 L400,520 H0 Z'},
+    {id:'stopa1',l:'Stopa robota',d:'M135,505 Q125,498 125,488 Q128,480 136,480 Q144,480 148,488 Q150,498 142,505 Z M148,480 Q148,472 155,468 Q162,464 168,470 Q170,478 164,484 Z'},
+    {id:'stopa2',l:'Druhá stopa',d:'M250,505 Q240,498 240,488 Q243,480 251,480 Q259,480 263,488 Q265,498 257,505 Z M250,480 Q250,472 243,468 Q236,464 230,470 Q228,478 234,484 Z'},
+    {id:'nohy',l:'Nohy robota',d:'M158,440 Q148,462 144,490 Q142,508 152,512 Q164,516 175,512 Q183,508 183,490 L180,445 Z M242,440 Q252,462 256,490 Q258,508 248,512 Q236,516 225,512 Q217,508 217,490 L220,445 Z'},
+    {id:'telo_rob',l:'Trup robota',d:'M148,245 Q140,262 140,285 Q140,318 145,342 Q150,360 158,372 Q165,380 172,382 Q185,388 200,388 Q215,388 228,382 Q235,380 242,372 Q250,360 255,342 Q260,318 260,285 Q260,262 252,245 Q242,232 228,228 Q215,224 200,224 Q185,224 172,228 Q158,232 148,245 Z'},
+    {id:'displej',l:'Displej na hrudi',d:'M168,268 H232 V328 H168 Z M172,274 H228 V322 H172 Z'},
+    {id:'displej_prikazy',l:'Displej - příkazy',d:'M178,286 H222 V295 H178 Z M178,302 H210 V310 H178 Z M178,312 H216 V320 H178 Z'},
+    {id:'tlacitka',l:'Tlačítka',d:'M158,340 Q153,335 155,328 Q160,322 167,325 Q172,322 177,328 Q178,336 174,342 Q168,347 162,344 Z M224,340 Q219,335 221,328 Q226,322 233,325 Q238,322 243,328 Q244,336 240,342 Q234,347 228,344 Z M190,355 Q185,350 186,343 Q191,337 199,340 Q207,337 212,343 Q212,352 207,357 Q200,362 194,358 Z'},
+    {id:'ruka_l',l:'Levá ruka',d:'M140,250 Q118,258 102,275 Q88,292 88,312 Q90,328 102,335 Q116,340 128,330 Q138,322 142,305 Q144,288 140,268 Z M92,318 Q84,328 82,340 Q86,352 96,355 Q105,358 112,350 Q118,342 115,330 Z'},
+    {id:'ruka_p',l:'Pravá ruka',d:'M260,250 Q282,258 298,275 Q312,292 312,312 Q310,328 298,335 Q284,340 272,330 Q262,322 258,305 Q256,288 260,268 Z M308,318 Q316,328 318,340 Q314,352 304,355 Q295,358 288,350 Q282,342 285,330 Z'},
+    {id:'hlava_rob',l:'Hlava robota',d:'M150,178 Q148,155 152,138 Q158,118 172,108 Q184,100 200,98 Q216,100 228,108 Q242,118 248,138 Q252,155 250,178 Q248,195 240,205 Q228,215 215,218 Q208,220 200,220 Q192,220 185,218 Q172,215 160,205 Q152,195 150,178 Z'},
+    {id:'antena',l:'Anténa',d:'M194,98 L190,65 Q193,55 200,52 Q207,55 210,65 L206,98 Z M200,52 Q194,44 188,40 Q185,44 188,50 Q194,56 200,52 Z M200,52 Q206,44 212,40 Q215,44 212,50 Q206,56 200,52 Z'},
+    {id:'oko_r1',l:'Levé oko robota',d:'M162,162 Q158,150 162,140 Q168,132 178,132 Q188,132 193,140 Q196,152 192,162 Q186,172 176,173 Q166,172 162,162 Z M176,162 Q170,156 170,148 Q170,140 176,137 Q182,140 182,148 Q182,156 176,162 Z'},
+    {id:'oko_r2',l:'Pravé oko robota',d:'M208,162 Q204,150 208,140 Q214,132 224,132 Q234,132 239,140 Q242,152 238,162 Q232,172 222,173 Q212,172 208,162 Z M222,162 Q216,156 216,148 Q216,140 222,137 Q228,140 228,148 Q228,156 222,162 Z'},
+    {id:'usta_rob',l:'Ústa robota',d:'M172,192 Q178,186 188,184 Q196,182 200,183 Q204,182 212,184 Q222,186 228,192 Q222,200 212,203 Q204,205 200,205 Q196,205 188,203 Q178,200 172,192 Z M178,194 Q184,190 194,188 Q200,187 206,188 Q216,190 222,194 Q216,198 206,200 Q200,201 194,200 Q184,198 178,194 Z'},
+    {id:'srouby',l:'Šrouby',d:'M155,112 Q150,106 152,100 Q158,94 165,98 Q170,94 175,100 Q176,108 171,113 Q165,118 160,115 Z M225,112 Q220,106 222,100 Q228,94 235,98 Q240,94 245,100 Q246,108 241,113 Q235,118 230,115 Z M155,178 Q150,172 152,166 Q158,160 165,164 Q170,160 175,166 Q176,174 171,179 Q165,184 160,181 Z M225,178 Q220,172 222,166 Q228,160 235,164 Q240,160 245,166 Q246,174 241,179 Q235,184 230,181 Z'}
+  ]}
+];
+
+let kaOtazky = [], kaIdx = 0, kaSkore = 0, kaSerie = 0, kaNejSerie = 0, kaTyp = 'anim';
+let aktHra = null;
+let spojKola = [], spojKoloIdx = 0, spojSkore = 0, spojVybranyFilm = null, spojSpojeni = {};
+let puzzleFilm = null, puzzleDilky = [], puzzleSel = null, puzzleTahy = 0, puzzleSrc = null;
+let pexKarty = [], pexOdkryte = [], pexSpar = [], pexPokusy = 0, pexCeka = false;
+let omalB = '#e81c3a', omalStav = {}, omalIdx = 0, omalStavAll = {};
+var omalCanvasData = {};
+// Šibenice stav
+var sibFilm = null, sibHady = [], sibChyby = 0, sibMaxChyb = 6, sibOdkryteDily = [];
+var omalCanvasData = {}; // ulozi ImageData per postava
+
+function mix(a) { return a.slice().sort(function() { return Math.random() - 0.5; }); }
+function getHS(k) { try { return parseInt(localStorage.getItem('fc_' + k) || '0', 10); } catch(e) { return 0; } }
+function setHS(k, n) { try { localStorage.setItem('fc_' + k, String(n)); } catch(e) {} }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+  try { sessionStorage.setItem('fc_screen', id); } catch(e) {}
+}
+
+function potvrzeniZpet(cil) {
+  if (confirm('Ukončit?')) showScreen(cil || 'home');
+}
+function potvrzeniZpetMini() {
+  if (confirm('Ukončit?')) {
+    // Pokud přišel ze studia (kvíz), jdi na vybrat-kviz, jinak vybrat-hry
+    var odkud = kaTyp === 'studio' ? 'vybrat-kviz' : 'vybrat-hry';
+    showScreen(odkud);
+  }
+}
+
+function getPoster(imdb, cb) {
+  if (CACHE[imdb]) { cb(CACHE[imdb]); return; }
+  fetch('https://www.omdbapi.com/?i=' + imdb + '&apikey=' + OMDB)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var src = d.Poster && d.Poster !== 'N/A' ? d.Poster : null;
+      if (src) CACHE[imdb] = src;
+      cb(src);
+    })
+    .catch(function() { cb(null); });
+}
+
+function refreshHS() {
+  var ha = getHS('anim'), hz = getHS('znalec'), hs = getHS('spoj'), h90 = getHS('90s');
+  var ea = document.getElementById('hs-anim'), ez = document.getElementById('hs-znalec'), estu = document.getElementById('hs-studio');
+  if (ea) ea.innerHTML = ha > 0 ? '<div class="kviz-btn-hs-l">REKORD</div><div class="kviz-btn-hs-v" style="color:#FFB830">' + ha + '/10</div>' : '';
+  if (ez) ez.innerHTML = hz > 0 ? '<div class="kviz-btn-hs-l">REKORD</div><div class="kviz-btn-hs-v" style="color:#E8445A">' + hz + '/10</div>' : '';
+  if (estu) estu.innerHTML = hs > 0 ? '<div class="kviz-btn-hs-l">REKORD</div><div class="kviz-btn-hs-v" style="color:#64b4ff">' + hs + '/12</div>' : '';
+  var e90 = document.getElementById('hs-90s');
+  if (e90) e90.innerHTML = h90 > 0 ? '<div class="kviz-btn-hs-l">REKORD</div><div class="kviz-btn-hs-v" style="color:#ff8800">' + h90 + '/12</div>' : '';
+}
+
+// ═══ KVÍZ ANIMOVANÉ ═══
+function spustitKviz(typ) {
+  kaTyp = typ; kaIdx = 0; kaSkore = 0; kaSerie = 0; kaNejSerie = 0;
+  if (typ === 'anim') {
+    kaOtazky = mix(ANIMOVANE).slice(0, 10);
+    showScreen('kviz-anim');
+    renderAnimQ();
+  } else if (typ === 'studio') {
+    document.getElementById('mini-name').textContent = '🏢 Uhádni studio';
+    showScreen('minihra');
+    startSpoj();
+  } else if (typ === '90s') {
+    // Připrav otázky: z každého filmu vezmi jednu otázku
+    var vsechnyQ = [];
+    FILMY_90S.forEach(function(f) {
+      f.otazky.forEach(function(q) {
+        vsechnyQ.push({film: f, q: q.q, a: q.a, m: q.m, zajimavost: f.zajimavost});
+      });
+    });
+    kaOtazky = mix(vsechnyQ).slice(0, 12);
+    showScreen('kviz-90s');
+    render90sQ();
+  } else {
+    kaOtazky = mix(ZNALEC).slice(0, 10);
+    showScreen('kviz-znalec');
+    renderZnalecQ();
+  }
+}
+
+function render90sQ() {
+  var q = kaOtazky[kaIdx];
+  document.getElementById('v90-prog').style.width = (kaIdx / kaOtazky.length * 100) + '%';
+  document.getElementById('v90-skore').textContent = kaSkore;
+  var moz = mix(q.m.slice());
+  window._90sMoz = moz;
+  window._90sSpravne = q.a;
+  // Náhodně zobraz zajímavost ~30% šance (ne po každé otázce)
+  window._90sZajimavost = (Math.random() < 0.30) ? q.zajimavost : null;
+  var pismena = ['A','B','C','D'];
+  var src = CACHE[q.film.imdb];
+  var html = '<div class="vhs-poster" id="v90-poster">'
+    + (src ? '<img src="' + src + '" alt="' + q.film.title + '">' : '<div style="font-size:32px;color:rgba(255,255,255,.3)">📼</div>')
+    + '</div>';
+  html += '<div class="vhs-q-box"><div class="vhs-q-badge">📼 ' + q.film.title.toUpperCase() + ' · ' + q.film.year + '</div>'
+    + '<div class="vhs-q-text">' + q.q + '</div></div>';
+  html += '<div style="padding-bottom:28px">';
+  for (var i = 0; i < moz.length; i++) {
+    html += '<button class="vhs-opt" onclick="vybr90sQ(' + i + ')">'
+      + '<div class="vhs-opt-letter">' + pismena[i] + '</div>'
+      + '<span class="vhs-opt-text">' + moz[i] + '</span></button>';
+  }
+  html += '</div>';
+  document.getElementById('v90-body').innerHTML = html;
+  if (!src) {
+    getPoster(q.film.imdb, function(loaded) {
+      var pb = document.getElementById('v90-poster');
+      if (pb && loaded) pb.innerHTML = '<img src="' + loaded + '" alt="' + q.film.title + '">';
+    });
+  }
+}
+
+function vybr90sQ(idx) {
+  var moz = window._90sMoz, spravne = window._90sSpravne;
+  var ok = moz[idx] === spravne;
+  if (ok) { kaSkore++; kaSerie++; if (kaSerie > kaNejSerie) kaNejSerie = kaSerie; } else { kaSerie = 0; }
+  document.getElementById('v90-skore').textContent = kaSkore;
+  var btns = document.getElementById('v90-body').querySelectorAll('.vhs-opt');
+  btns.forEach(function(btn, i) {
+    btn.disabled = true;
+    if (moz[i] === spravne) btn.classList.add('ok');
+    else if (i === idx) btn.classList.add('err');
+    else btn.classList.add('dim');
+  });
+  // Přidat zajímavost pokud byla náhodně vybrána
+  if (window._90sZajimavost) {
+    var body = document.getElementById('v90-body');
+    var box = document.createElement('div');
+    box.className = 'vedel-box';
+    box.innerHTML = '<div class="vedel-label">💡 VĚDĚL JSI, ŽE...</div><div class="vedel-text">' + window._90sZajimavost + '</div>';
+    body.appendChild(box);
+  }
+  var delay = window._90sZajimavost ? 2800 : 1500;
+  setTimeout(function() {
+    kaIdx++;
+    if (kaIdx >= kaOtazky.length) {
+      // Výsledky – přes standardní zobrazení
+      zobrazVysledky();
+    } else {
+      render90sQ();
+    }
+  }, delay);
+}
+
+function renderAnimQ() {
+  var q = kaOtazky[kaIdx];
+  document.getElementById('ka-prog').style.width = (kaIdx / kaOtazky.length * 100) + '%';
+  document.getElementById('ka-skore').textContent = kaSkore;
+  var spatne = mix(ANIMOVANE.filter(function(f) { return f.id !== q.id; })).slice(0, 3);
+  var moz = mix([q].concat(spatne));
+  window._animMoz = moz;
+  var pismena = ['A', 'B', 'C', 'D'];
+  var html = '<div class="poster-box" id="ka-poster"><div style="font-size:30px">⏳</div></div>';
+  html += '<div style="text-align:center;font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px">' + q.year + ' · Který film to je?</div>';
+  html += '<div style="padding-bottom:28px">';
+  for (var i = 0; i < moz.length; i++) {
+    html += '<button class="opt" onclick="vybrAnimQ(' + i + ')"><div class="opt-letter" style="background:rgba(255,184,48,.2);color:#FFB830">' + pismena[i] + '</div><span class="opt-text">' + moz[i].title + '</span></button>';
+  }
+  html += '</div>';
+  document.getElementById('ka-body').innerHTML = html;
+  getPoster(q.imdb, function(src) {
+    var pb = document.getElementById('ka-poster');
+    if (pb) pb.innerHTML = src ? '<img src="' + src + '">' : '<div style="font-size:30px">🎬</div>';
+  });
+}
+
+function vybrAnimQ(idx) {
+  var moz = window._animMoz;
+  var q = kaOtazky[kaIdx];
+  var ok = moz[idx].id === q.id;
+  if (ok) { kaSkore++; kaSerie++; if (kaSerie > kaNejSerie) kaNejSerie = kaSerie; } else { kaSerie = 0; }
+  document.getElementById('ka-skore').textContent = kaSkore;
+  var btns = document.getElementById('ka-body').querySelectorAll('.opt');
+  btns.forEach(function(btn, i) {
+    btn.disabled = true;
+    if (moz[i].id === q.id) btn.classList.add('ok');
+    else if (i === idx) btn.classList.add('err');
+    else btn.classList.add('dim');
+  });
+  setTimeout(function() {
+    kaIdx++;
+    if (kaIdx >= kaOtazky.length) zobrazVysledky();
+    else renderAnimQ();
+  }, 1400);
+}
+
+// ═══ KVÍZ ZNALEC ═══
+function renderZnalecQ() {
+  var q = kaOtazky[kaIdx];
+  document.getElementById('kz-prog').style.width = (kaIdx / kaOtazky.length * 100) + '%';
+  document.getElementById('kz-skore').textContent = kaSkore;
+  document.getElementById('kz-serie').textContent = kaSerie >= 2 ? '🔥' + kaSerie : '';
+  var moz = mix(q.m.slice());
+  window._znMoz = moz; window._znSpravne = q.a;
+  var pismena = ['A', 'B', 'C', 'D'];
+  var html = '<div class="zn-q"><div class="zn-q-badge">OTÁZKA ' + (kaIdx + 1) + ' / ' + kaOtazky.length + '</div><div class="zn-q-text">' + q.q + '</div></div>';
+  html += '<div style="padding-bottom:28px">';
+  for (var i = 0; i < moz.length; i++) {
+    html += '<button class="opt" onclick="vybrZnalecQ(' + i + ')"><div class="opt-letter" style="background:rgba(232,68,90,.2);color:#E8445A">' + pismena[i] + '</div><span class="opt-text">' + moz[i] + '</span></button>';
+  }
+  html += '</div>';
+  document.getElementById('kz-body').innerHTML = html;
+}
+
+function vybrZnalecQ(idx) {
+  var moz = window._znMoz, spravne = window._znSpravne;
+  var ok = moz[idx] === spravne;
+  if (ok) { kaSkore++; kaSerie++; if (kaSerie > kaNejSerie) kaNejSerie = kaSerie; } else { kaSerie = 0; }
+  document.getElementById('kz-skore').textContent = kaSkore;
+  document.getElementById('kz-serie').textContent = kaSerie >= 2 ? '🔥' + kaSerie : '';
+  var btns = document.getElementById('kz-body').querySelectorAll('.opt');
+  btns.forEach(function(btn, i) {
+    btn.disabled = true;
+    if (moz[i] === spravne) btn.classList.add('ok');
+    else if (i === idx) btn.classList.add('err');
+    else btn.classList.add('dim');
+  });
+  setTimeout(function() {
+    kaIdx++;
+    if (kaIdx >= kaOtazky.length) zobrazVysledky();
+    else renderZnalecQ();
+  }, 1400);
+}
+
+// ═══ VÝSLEDKY ═══
+function zobrazVysledky() {
+  var pct = kaSkore / kaOtazky.length;
+  var prev = getHS(kaTyp);
+  var jeNovy = kaSkore > prev;
+  if (jeNovy) setHS(kaTyp, kaSkore);
+  var barva = kaTyp === 'anim' ? '#FFB830' : kaTyp === '90s' ? '#ff8800' : '#E8445A';
+  var r = pct >= .9 ? {e:'🏆',t:'Filmový expert!',s:'Fantastický výsledek!'}
+    : pct >= .7 ? {e:'🎉',t:'Skvělý výsledek!',s:'Filmy ti nejsou cizí'}
+    : pct >= .5 ? {e:'👍',t:'Dobrý pokus!',s:'Ještě procvičit'}
+    : {e:'🎬',t:'Trénuj dál!',s:'Filmy jsou skvělé!'};
+  document.getElementById('v-emoji').textContent = r.e;
+  document.getElementById('v-title').textContent = r.t;
+  document.getElementById('v-sub').textContent = r.s;
+  document.getElementById('v-new').style.display = jeNovy ? 'block' : 'none';
+  document.getElementById('v-spravne').textContent = kaSkore + '/' + kaOtazky.length;
+  document.getElementById('v-spravne').style.color = barva;
+  document.getElementById('v-pct').textContent = Math.round(pct * 100) + '%';
+  document.getElementById('v-serie').textContent = kaNejSerie;
+  document.getElementById('v-rekord').textContent = Math.max(kaSkore, prev) + '/10';
+  document.getElementById('v-rekord').style.color = barva;
+  document.getElementById('v-znovu').style.background = barva;
+  showScreen('vysledky');
+  refreshHS();
+}
+function znovu() { spustitKviz(kaTyp); }
+
+// ═══ HRY ═══
+function renderHryGrid() {
+  var paleta = [
+    {bg:'linear-gradient(145deg,#be185d,#9333ea)',border:'rgba(236,72,153,.6)'},
+    {bg:'linear-gradient(145deg,#7c3aed,#4f46e5)',border:'rgba(139,92,246,.6)'},
+    {bg:'linear-gradient(145deg,#0e7490,#0891b2)',border:'rgba(6,182,212,.6)'},
+    {bg:'linear-gradient(145deg,#166534,#15803d)',border:'rgba(74,222,128,.6)'}
+  ];
+  document.getElementById('hry-grid').innerHTML = HRY_DEF.map(function(h, i) {
+    var p = paleta[i % paleta.length];
+    return '<div class="hra-card" style="animation-delay:' + (i * .07) + 's;background:' + p.bg + ';border-color:' + p.border + '" onclick="spustitHru(\'' + h.id + '\')">'
+      + '<div class="hra-card-emoji">' + h.emoji + '</div>'
+      + '<div class="hra-card-name">' + h.name + '</div>'
+      + '<div class="hra-card-desc">' + h.desc + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function spustitHru(hraId) {
+  aktHra = HRY_DEF.find(function(h) { return h.id === hraId; });
+  if (!aktHra) return;
+  document.getElementById('mini-name').textContent = aktHra.emoji + ' ' + aktHra.name;
+  showScreen('minihra');
+  if (hraId === 'spoj') startSpoj();
+  else if (hraId === 'sibenice') startSibenice();
+  else if (hraId === 'puzzle') startPuzzle();
+  else if (hraId === 'pexeso') startPexeso();
+  else if (hraId === 'omalov') startOmalov();
+}
+
+// ═══ ŠIBENICE ═══
+var SIBENICE_SLOVA = (function() {
+  var slova = [];
+  ANIMOVANE.forEach(function(f) { slova.push({titul: f.title, imdb: f.imdb, hint: f.title}); });
+  // Přidáme i seriály
+  [{t:'SpongeBob v kalhotách',i:'tt0206512'},{t:'Tlapková patrola',i:'tt2756752'},
+   {t:'Avatar',i:'tt0417299'},{t:'Ninjago',i:'tt1812614'},{t:'Peppa Prasátko',i:'tt0426042'},
+   {t:'Pokémon',i:'tt0168366'},{t:'Gabinin kouzelný domek',i:'tt11959554'},
+   {t:'Bluey',i:'tt8587060'},{t:'Miraculous',i:'tt4786824'},
+   {t:'Gravity Falls',i:'tt1840492'},{t:'Hilda',i:'tt7529770'}
+  ].forEach(function(s) { slova.push({titul: s.t, imdb: s.i}); });
+  return slova;
+})();
+
+function startSibenice() {
+  sibFilm = mix(SIBENICE_SLOVA)[0];
+  sibHady = [];
+  sibChyby = 0;
+  sibOdkryteDily = [];
+  renderSibenice();
+}
+
+function sibNapoveda() {
+  if (sibChyby >= sibMaxChyb) return;
+  if (sibOdkryteDily.length >= 6) return;
+  // Najdi další neodhalenou část (náhodně)
+  var dostupne = [0,1,2,3,4,5].filter(function(i) { return sibOdkryteDily.indexOf(i) < 0; });
+  if (dostupne.length === 0) return;
+  var nahodna = dostupne[Math.floor(Math.random() * dostupne.length)];
+  sibOdkryteDily.push(nahodna);
+  sibChyby++; // nápověda = -1 pokus
+  renderSibenice();
+}
+
+function renderSibenice() {
+  var titul = sibFilm.titul.toUpperCase();
+  var zbyvaPop = sibMaxChyb - sibChyby; // kolik popcornů zbývá
+  var hotovo = titul.split('').every(function(c) {
+    return c === ' ' || c === ':' || c === '-' || c === '!' || c === '?' || sibHady.indexOf(c) >= 0;
+  });
+  var prohra = sibChyby >= sibMaxChyb;
+
+  // Zobrazení titulu – slova jako nedělitelné bloky
+  var titulHtml = '';
+  var slova = titul.split(' ');
+  slova.forEach(function(slovo, si) {
+    titulHtml += '<span style="display:inline-flex;flex-shrink:0;align-items:flex-end;gap:2px">';
+    slovo.split('').forEach(function(c) {
+      if (c === ':' || c === '-' || c === '!' || c === '?') {
+        titulHtml += '<span style="font-size:20px;font-weight:900;color:#fff;align-self:flex-end;padding-bottom:5px">' + c + '</span>';
+      } else {
+        var odkryte = sibHady.indexOf(c) >= 0 || prohra;
+        var barva = prohra && sibHady.indexOf(c) < 0 ? '#ff6b6b' : '#FFD60A';
+        titulHtml += '<span style="display:inline-flex;flex-direction:column;align-items:center">'
+          + '<span style="font-size:24px;font-weight:900;color:' + barva + ';min-width:20px;text-align:center">' + (odkryte ? c : '&nbsp;') + '</span>'
+          + '<span style="width:20px;height:3px;background:rgba(255,255,255,.45);border-radius:2px;margin-top:3px"></span>'
+          + '</span>';
+      }
+    });
+    titulHtml += '</span>';
+    if (si < slova.length - 1) {
+      titulHtml += '<span style="display:inline-block;width:10px;flex-shrink:0"></span>';
+    }
+  });
+
+  var html = '';
+  // Nastavit mini-body na kompaktní layout
+  var mb = document.getElementById('mini-body');
+  if (mb) { mb.style.padding = '0 12px 16px'; mb.style.gap = '8px'; }
+
+  // Plakát (skrytý/odkrytý po částech)
+  var src = CACHE[sibFilm.imdb];
+  html += '<div style="width:100%;display:flex;gap:14px;align-items:flex-start">';
+
+  // Levý sloupec: plakát 2x3 grid
+  var pw = 90, ph = 126;
+  html += '<div style="width:' + pw + 'px;flex-shrink:0;position:relative">';
+  if (!src || (!hotovo && !prohra && sibOdkryteDily.length === 0)) {
+    // Žádná nápověda ani konec – jen kamera ikona + hint tlačítko
+    html += '<div onclick="sibNapoveda()" style="width:' + pw + 'px;height:' + ph + 'px;border-radius:12px;overflow:hidden;background:linear-gradient(145deg,#1a1a2e,#0d0d1a);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:2px dashed rgba(255,215,0,.45);box-shadow:0 4px 16px rgba(0,0,0,.5);gap:8px">'
+      + '<span style="font-size:34px">🎬</span>'
+      + '<span style="font-size:10px;color:rgba(255,215,0,.75);font-weight:800;text-align:center;padding:0 8px;line-height:1.5">NÁPOVĚDA<br>(-1 🍿)</span>'
+      + '</div>';
+  } else if (hotovo || prohra) {
+    // Konec hry – ukáž celý plakát
+    html += '<div style="width:' + pw + 'px;height:' + ph + 'px;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.5)">'
+      + (src ? '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="width:100%;height:100%;background:#1a1a2e;display:flex;align-items:center;justify-content:center;font-size:30px">🎬</div>')
+      + '</div>';
+  } else {
+    // Plakát s mřížkou – odkryté části vidět, zbytek tmavý
+    html += '<div onclick="sibNapoveda()" style="width:' + pw + 'px;height:' + ph + 'px;border-radius:12px;overflow:hidden;position:relative;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5)">';
+    if (src) {
+      html += '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover;display:block">';
+    }
+    // Překryvná mřížka 2x3
+    var tw = Math.floor(pw / 2), th = Math.floor(ph / 3);
+    for (var gy = 0; gy < 3; gy++) {
+      for (var gx = 0; gx < 2; gx++) {
+        var gi = gy * 2 + gx;
+        var odkryty = sibOdkryteDily.indexOf(gi) >= 0;
+        html += '<div style="position:absolute;left:' + (gx*tw) + 'px;top:' + (gy*th) + 'px;width:' + tw + 'px;height:' + th + 'px;background:' + (odkryty ? 'transparent' : '#0d0d1a') + ';transition:background .4s;border:1px solid rgba(255,255,255,.06)"></div>';
+      }
+    }
+    // Hint overlay
+    if (sibOdkryteDily.length < 6 && sibChyby < sibMaxChyb) {
+      html += '<div style="position:absolute;bottom:4px;right:4px;background:rgba(255,215,0,.85);border-radius:6px;padding:2px 5px;font-size:9px;font-weight:800;color:#000">+💡 -🍿</div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Pravý sloupec: popcorny kompaktně
+  html += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:1px">POKUSY</div>';
+  html += '<div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center">';
+  for (var pi = 0; pi < sibMaxChyb; pi++) {
+    html += '<span style="font-size:' + (pi < zbyvaPop ? '30' : '22') + 'px;line-height:1;'
+      + (pi < zbyvaPop ? 'filter:drop-shadow(0 2px 6px rgba(255,180,0,.6))' : 'opacity:.18') + '">'
+      + (pi < zbyvaPop ? '🍿' : '🪣') + '</span>';
+  }
+  html += '</div>';
+  if (!hotovo && !prohra) {
+    html += '<div style="font-size:11px;color:rgba(255,200,50,.65);margin-top:2px;text-align:center">'
+      + (sibChyby === 0 ? '🎬 Hádej!' : '❌ ' + sibChyby + ' chyb' + (sibChyby < 2 ? 'a' : sibChyby < 5 ? 'y' : ''))
+      + '</div>';
+  }
+  html += '</div></div>'; // konec flex řádku
+
+  // Titul písmena – větší
+  html += '<div style="display:flex;flex-wrap:wrap;justify-content:center;row-gap:10px;padding:12px 8px;background:rgba(255,255,255,.06);border-radius:16px;width:100%;min-height:58px;align-items:flex-end">' + titulHtml + '</div>';
+
+  // Výsledek nebo klávesnice
+  if (hotovo) {
+    html += '<div class="mini-result">'
+      + '<div class="res-emoji">🎉</div>'
+      + '<div class="res-title">Výborně!</div>'
+      + '<div class="res-sub">' + sibFilm.titul + '</div>'
+      + '<button class="res-next" onclick="startSibenice()">Další film ›</button>'
+      + '</div>';
+  } else if (prohra) {
+    html += '<div class="mini-result">'
+      + '<div class="res-emoji">😢</div>'
+      + '<div class="res-title">Byl to: ' + sibFilm.titul + '</div>'
+      + '<div class="res-sub">Popcorn ti došel 🍿</div>'
+      + '<button class="res-next" onclick="startSibenice()">Zkusit znovu ›</button>'
+      + '</div>';
+  } else {
+    // Klávesnice – větší tlačítka, využij celou šíři
+    var radky = ['AÁBCČDĎEÉĚ','FGHIÍJKLMN','ŇOÓPRŘSŠT','ŤUÚŮVWYZŽ'];
+    radky.forEach(function(radek) {
+      html += '<div style="display:grid;grid-template-columns:repeat(' + radek.length + ',1fr);gap:5px;width:100%;margin-bottom:5px">';
+      radek.split('').forEach(function(p) {
+        var pouzite = sibHady.indexOf(p) >= 0;
+        var spravne = pouzite && titul.indexOf(p) >= 0;
+        var spatne = pouzite && titul.indexOf(p) < 0;
+        var bg = spravne ? '#34C759' : spatne ? 'rgba(255,59,48,.55)' : 'rgba(255,255,255,.14)';
+        var col = spravne ? '#000' : '#fff';
+        html += '<button onclick="sibKlik(&quot;' + p + '&quot;)"'
+          + ' style="height:44px;border-radius:10px;border:none;background:' + bg
+          + ';color:' + col + ';font-size:15px;font-weight:800;cursor:' + (pouzite?'default':'pointer')
+          + ';opacity:' + (pouzite?'.35':'1') + ';transition:all .1s;padding:0"'
+          + (pouzite?' disabled':'') + '>' + p + '</button>';
+      });
+      html += '</div>';
+    });
+  }
+
+  document.getElementById('mini-body').innerHTML = html;
+  if (!CACHE[sibFilm.imdb]) getPoster(sibFilm.imdb, function() {});
+}
+
+function sibKlik(pismeno) {
+  if (sibHady.indexOf(pismeno) >= 0) return;
+  sibHady.push(pismeno);
+  var titul = sibFilm.titul.toUpperCase();
+  if (titul.indexOf(pismeno) < 0) sibChyby++;
+  renderSibenice();
+}
+
+// ═══ UHÁDNI STUDIO ═══
+// Flow: zobraz film → vyber studio → okamžitá odezva → další film
+
+var studioOtazky = [], studioIdx = 0, studioSkore = 0, studioMoz = [];
+
+function startSpoj() {
+  // Vytvoř otázky: pro každý film ze všech studií
+  var vsechnyFilmy = [];
+  STUDIA.forEach(function(s) {
+    s.filmy.forEach(function(fid) {
+      var f = ANIMOVANE.find(function(x) { return x.id === fid; });
+      if (f) vsechnyFilmy.push({film: f, studio: s});
+    });
+  });
+  studioOtazky = mix(vsechnyFilmy).slice(0, 12);
+  studioIdx = 0; studioSkore = 0;
+  // Prefetch posterů
+  studioOtazky.forEach(function(q) { getPoster(q.film.imdb, function() {}); });
+  renderStudioQ();
+}
+
+function renderStudioQ() {
+  if (studioIdx >= studioOtazky.length) { renderStudioVysledky(); return; }
+  var q = studioOtazky[studioIdx];
+  var src = CACHE[q.film.imdb];
+
+  // 4 možnosti: správné + 3 jiná
+  studioMoz = mix([q.studio].concat(mix(STUDIA.filter(function(s) { return s.id !== q.studio.id; })).slice(0, 3)));
+
+  var html = '<div style="font-size:11px;color:rgba(255,255,255,.35);text-align:center;padding-bottom:10px">'
+    + (studioIdx + 1) + ' / ' + studioOtazky.length
+    + ' &nbsp;·&nbsp; ★ ' + studioSkore + '</div>';
+
+  // Progress bar
+  html += '<div style="width:100%;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-bottom:14px">'
+    + '<div style="width:' + Math.round(studioIdx / studioOtazky.length * 100) + '%;height:100%;background:#FFD60A;border-radius:2px"></div></div>';
+
+  // Film plakát
+  html += '<div id="studio-poster" style="width:160px;height:224px;border-radius:14px;overflow:hidden;background:#1a1a2e;flex-shrink:0;display:flex;align-items:center;justify-content:center">'
+    + (src ? '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover">' : '<div style="font-size:13px;color:rgba(255,255,255,.4);text-align:center;padding:10px">' + q.film.title + '</div>')
+    + '</div>';
+
+  html += '<div style="font-size:13px;color:rgba(255,255,255,.45);text-align:center">Ke kterému studiu patří?</div>';
+
+  // Studia jako tlačítka
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">';
+  studioMoz.forEach(function(s, si) {
+    html += '<button id="stbtn_' + si + '" onclick="vybrStudio(' + si + ')" style="padding:16px 10px;border-radius:14px;background:' + s.barva + '18;border:1.5px solid ' + s.barva + '40;cursor:pointer;text-align:center;transition:all .2s">'
+      + '<div style="font-size:28px;margin-bottom:4px">' + s.emoji + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:' + s.barva + '">' + s.name + '</div>'
+      + '</button>';
+  });
+  html += '</div>';
+
+  document.getElementById('mini-body').innerHTML = html;
+
+  // Dotáhni poster pokud chybí
+  if (!src) {
+    getPoster(q.film.imdb, function(loaded) {
+      var box = document.getElementById('studio-poster');
+      if (box && loaded) box.innerHTML = '<img src="' + loaded + '" style="width:100%;height:100%;object-fit:cover">';
+    });
+  }
+}
+
+function vybrStudio(si) {
+  var q = studioOtazky[studioIdx];
+  var vybrane = studioMoz[si];
+  var ok = vybrane.id === q.studio.id;
+  if (ok) studioSkore++;
+
+  // Vizuální feedback na tlačítkách
+  studioMoz.forEach(function(s, i) {
+    var btn = document.getElementById('stbtn_' + i);
+    if (!btn) return;
+    btn.disabled = true;
+    if (s.id === q.studio.id) {
+      btn.style.background = 'rgba(52,199,89,.3)';
+      btn.style.borderColor = '#34C759';
+    } else if (i === si) {
+      btn.style.background = 'rgba(255,59,48,.3)';
+      btn.style.borderColor = '#FF3B30';
+    } else {
+      btn.style.opacity = '0.3';
+    }
+  });
+
+  setTimeout(function() {
+    studioIdx++;
+    renderStudioQ();
+  }, ok ? 900 : 1400);
+}
+
+function renderStudioVysledky() {
+  var pct = Math.round(studioSkore / studioOtazky.length * 100);
+  var prev = getHS('spoj');
+  if (studioSkore > prev) setHS('spoj', studioSkore);
+  document.getElementById('mini-body').innerHTML =
+    '<div style="text-align:center;padding:30px 0">'
+    + '<div style="font-size:56px;margin-bottom:14px">' + (pct >= 80 ? '🏆' : pct >= 60 ? '🎉' : '🎬') + '</div>'
+    + '<div style="font-size:22px;font-weight:800;margin-bottom:6px">' + studioSkore + ' / ' + studioOtazky.length + '</div>'
+    + '<div style="font-size:14px;color:rgba(255,255,255,.4);margin-bottom:6px">' + pct + '% úspěšnost</div>'
+    + '<div style="font-size:13px;color:rgba(255,255,255,.3);margin-bottom:24px">' + (pct >= 80 ? 'Znáš studia jako expert!' : pct >= 60 ? 'Dobrá znalost studií' : 'Procvič si studia!') + '</div>'
+    + '<button class="res-next" onclick="startSpoj()">↺ Hrát znovu</button>'
+    + '<br><br><button style="padding:12px 28px;border-radius:14px;background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer" onclick="showScreen(&quot;vybrat-kviz&quot;)">&#8592; Zpět na kvíz</button>'
+    + '</div>';
+}
+
+// ═══ PUZZLE ═══
+function startPuzzle() {
+  puzzleFilm = mix(ANIMOVANE)[0];
+  puzzleDilky = mix([0,1,2,3,4,5,6,7,8]);
+  puzzleSel = null; puzzleTahy = 0; puzzleSrc = null;
+  getPoster(puzzleFilm.imdb, function(s) { puzzleSrc = s; renderPuzzle(); });
+}
+
+function renderPuzzle() {
+  var vyreseno = puzzleDilky.every(function(v, i) { return v === i; });
+  var html = '<div class="mini-lbl">🧩 ' + puzzleFilm.title + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,.35);text-align:center">' + puzzleTahy + ' tahů' + (vyreseno ? ' · ✓ Složeno!' : '') + '</div>';
+  if (!vyreseno) {
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:#111;border-radius:12px;overflow:hidden;width:270px;height:360px;flex-shrink:0">';
+    for (var p = 0; p < 9; p++) {
+      var d = puzzleDilky[p], col = d % 3, row = Math.floor(d / 3);
+      var bg = puzzleSrc ? 'background-image:url(' + puzzleSrc + ');background-size:300% 300%;background-position:' + (col * 50) + '% ' + (row * 50) + '%' : 'background:#2a2a3e';
+      html += '<div style="overflow:hidden;cursor:pointer;border:2px solid ' + (puzzleSel === p ? '#FFD60A' : 'transparent') + ';border-radius:4px;' + bg + '" onclick="klikPuzzle(' + p + ')"></div>';
+    }
+    html += '</div>';
+    html += '<button class="mini-opt" style="text-align:center" onclick="startPuzzle()">🔀 Nový film</button>';
+  } else {
+    html += '<div class="mini-result"><div class="res-emoji">🏆</div><div class="res-title">Složeno za ' + puzzleTahy + ' tahů!</div><button class="res-next" onclick="startPuzzle()">Nový film ›</button></div>';
+  }
+  document.getElementById('mini-body').innerHTML = html;
+}
+
+function klikPuzzle(pos) {
+  if (puzzleSel === null) { puzzleSel = pos; }
+  else {
+    var n = puzzleDilky.slice(), t = n[puzzleSel]; n[puzzleSel] = n[pos]; n[pos] = t;
+    puzzleDilky = n; puzzleTahy++; puzzleSel = null;
+  }
+  renderPuzzle();
+}
+
+// ═══ PEXESO ═══
+function startPexeso() {
+  var vybrane = mix(ANIMOVANE).slice(0, 6);
+  pexKarty = mix(vybrane.concat(vybrane)).map(function(f, i) {
+    return {id: f.id, imdb: f.imdb, pos: i, odkryta: false, sparovana: false};
+  });
+  pexOdkryte = []; pexSpar = []; pexPokusy = 0; pexCeka = false;
+  renderPexeso();
+}
+
+function renderPexeso() {
+  var hotovo = pexSpar.length === pexKarty.length / 2;
+  var html = '<div style="display:flex;gap:16px;justify-content:center;font-size:13px;color:rgba(255,255,255,.5);margin-bottom:6px">'
+    + '<span>Pokusy: <b style="color:#fff">' + pexPokusy + '</b></span>'
+    + '<span>Nalezeno: <b style="color:#34C759">' + pexSpar.length + '/' + (pexKarty.length / 2) + '</b></span></div>'
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%">';
+  pexKarty.forEach(function(k) {
+    html += '<div class="pex-karta ' + (k.sparovana ? 'sparovana' : k.odkryta ? 'odkryta' : '') + '" id="pex_' + k.pos + '" onclick="klikPex(' + k.pos + ')">'
+      + (k.odkryta || k.sparovana ? (CACHE[k.imdb] ? '<img src="' + CACHE[k.imdb] + '">' : '🎬') : '🎬')
+      + '</div>';
+  });
+  html += '</div>';
+  if (hotovo) html += '<div class="mini-result"><div class="res-emoji">🎊</div><div class="res-title">Hotovo za ' + pexPokusy + ' pokusů!</div><button class="res-next" onclick="startPexeso()">Hrát znovu ›</button></div>';
+  document.getElementById('mini-body').innerHTML = html;
+  pexKarty.forEach(function(k) { if (!CACHE[k.imdb]) getPoster(k.imdb, function() {}); });
+}
+
+function klikPex(pos) {
+  if (pexCeka) return;
+  var k = pexKarty[pos];
+  if (k.odkryta || k.sparovana) return;
+  k.odkryta = true;
+  getPoster(k.imdb, function() {
+    renderPexeso();
+    pexOdkryte.push(pos);
+    if (pexOdkryte.length === 2) {
+      pexPokusy++;
+      pexCeka = true;
+      var ka = pexKarty[pexOdkryte[0]], kb = pexKarty[pexOdkryte[1]];
+      if (ka.id === kb.id) {
+        setTimeout(function() { ka.sparovana = kb.sparovana = true; pexSpar.push(ka.id); pexOdkryte = []; pexCeka = false; renderPexeso(); }, 600);
+      } else {
+        setTimeout(function() { ka.odkryta = kb.odkryta = false; pexOdkryte = []; pexCeka = false; renderPexeso(); }, 900);
+      }
+    }
+  });
+}
+
+// ═══ OMALOVÁNKY ═══
+function startOmalov() {
+  omalIdx = 0; omalStav = {}; omalB = OMAL_BARVY[0];
+  renderOmalov();
+}
+
+function renderOmalovCanvas(p) {
+  var mb = document.getElementById('mini-body');
+  mb.style.padding = '0';
+  mb.style.gap = '0';
+  mb.style.overflow = 'hidden';
+
+  // Počet postav pro tečky indikátoru
+  var totalP = OMAL_POSTAVY.length;
+
+  // Canvas - přes veškerý prostor
+  var html = '<div style="flex:1;width:100%;min-height:0;position:relative;background:#fff9ee;overflow:hidden">'
+    + '<canvas id="omal-canvas" width="' + p.vw + '" height="' + p.vh + '" '
+    + 'style="display:block;width:100%;height:100%;touch-action:none;cursor:crosshair"></canvas>'
+    // Šipky pro přejíždění
+    + (omalIdx > 0 ? '<div onclick="omalVyprP(-1)" style="position:absolute;left:0;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.35);color:#fff;font-size:22px;padding:10px 8px;border-radius:0 10px 10px 0;cursor:pointer;-webkit-tap-highlight-color:transparent">‹</div>' : '')
+    + (omalIdx < totalP-1 ? '<div onclick="omalVyprP(1)" style="position:absolute;right:0;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.35);color:#fff;font-size:22px;padding:10px 8px;border-radius:10px 0 0 10px;cursor:pointer;-webkit-tap-highlight-color:transparent">›</div>' : '')
+    // Tečky dole
+    + '<div style="position:absolute;bottom:6px;left:0;right:0;display:flex;justify-content:center;gap:6px">';
+  for (var d = 0; d < totalP; d++) {
+    html += '<div style="width:7px;height:7px;border-radius:50%;background:' + (d===omalIdx?'#FFD60A':'rgba(255,255,255,.35)') + '"></div>';
+  }
+  html += '</div></div>';
+
+  // Spodní panel
+  html += '<div id="omal-panel" style="width:100%;background:#12101e;border-top:1px solid rgba(255,255,255,.1);padding:8px 12px 12px;flex-shrink:0">';
+
+  // Paleta 2×8
+  html += '<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:8px">';
+  for (var j = 0; j < OMAL_BARVY.length; j++) {
+    var b = OMAL_BARVY[j];
+    var isOn = b === omalB;
+    var extra = (b === '#ffffff') ? 'outline:1px solid rgba(160,160,160,.5);' : '';
+    html += '<div class="omal-bv ' + (isOn?'on':'') + '" style="' + extra + 'background:' + b + '" onclick="omalVybrB(' + j + ')"></div>';
+  }
+  html += '</div>';
+
+  // Tlačítka
+  html += '<div style="display:flex;gap:8px">'
+    + '<button onclick="omalReset()" style="flex:1;padding:10px 6px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-size:12px;font-weight:700;cursor:pointer">🗑️ Vymazat</button>'
+    + '<button onclick="omalUlozit()" style="flex:1;padding:10px 6px;border-radius:12px;background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.4);color:#FFD60A;font-size:12px;font-weight:700;cursor:pointer">💾 Uložit</button>'
+    + '</div></div>';
+
+  mb.innerHTML = html;
+
+  var canvas = document.getElementById('omal-canvas');
+  window._omalCanvas = canvas;
+  window._omalP = p;
+  var ctx = canvas.getContext('2d');
+
+  // Načíst linky jako překryvný obrázek (průhledný, jen linky)
+  var linesImg = new Image();
+  linesImg.src = p.img;
+  window._omalLinesImg = linesImg;
+
+  function nakreslObrazek() {
+    // Bílé pozadí
+    ctx.fillStyle = '#fff9ee';
+    ctx.fillRect(0, 0, p.vw, p.vh);
+    // Pokud máme uloženou barevnou vrstvu, nakreslit ji
+    if (omalCanvasData[omalIdx]) {
+      ctx.putImageData(omalCanvasData[omalIdx], 0, 0);
+    }
+    // Překreslit linky navrch
+    if (linesImg.complete) {
+      ctx.drawImage(linesImg, 0, 0, p.vw, p.vh);
+    } else {
+      linesImg.onload = function() {
+        ctx.drawImage(linesImg, 0, 0, p.vw, p.vh);
+      };
+    }
+  }
+  nakreslObrazek();
+  window._omalNakreslObrazek = nakreslObrazek;
+
+  // Swipe detekce
+  var swipeStartX = 0, swipeStartY = 0;
+  canvas.addEventListener('touchstart', function(e) {
+    swipeStartX = e.touches[0].clientX;
+    swipeStartY = e.touches[0].clientY;
+  }, {passive: true});
+
+  canvas.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - swipeStartX;
+    var dy = e.changedTouches[0].clientY - swipeStartY;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      // Swipe - přejdi na jinou postavu
+      if (dx < 0 && omalIdx < OMAL_POSTAVY.length - 1) { omalVyprP(1); return; }
+      if (dx > 0 && omalIdx > 0) { omalVyprP(-1); return; }
+      return;
+    }
+    // Klik/tap = flood fill
+    e.preventDefault();
+    var src = e.changedTouches[0];
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = p.vw / rect.width, scaleY = p.vh / rect.height;
+    var x = Math.round((src.clientX - rect.left) * scaleX);
+    var y = Math.round((src.clientY - rect.top) * scaleY);
+    omalFloodFillPlusCover(canvas, x, y, omalB);
+  }, {passive: false});
+
+  canvas.addEventListener('click', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = p.vw / rect.width, scaleY = p.vh / rect.height;
+    var x = Math.round((e.clientX - rect.left) * scaleX);
+    var y = Math.round((e.clientY - rect.top) * scaleY);
+    omalFloodFillPlusCover(canvas, x, y, omalB);
+  });
+}
+
+// Přechod postav tlačítky/swipem
+function omalVyprP(dir) {
+  var next = omalIdx + dir;
+  if (next < 0 || next >= OMAL_POSTAVY.length) return;
+  // Uložit aktuální stav canvasu
+  var canvas = document.getElementById('omal-canvas');
+  if (canvas && window._omalLinesImg) {
+    var ctx = canvas.getContext('2d');
+    // Uložit jen barevnou vrstvu (bez linek)
+    omalCanvasData[omalIdx] = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  }
+  omalIdx = next;
+  renderOmalov();
+}
+
+// Flood fill + překreslit linky navrch = čisté hrany
+function omalFloodFillPlusCover(canvas, startX, startY, fillHex) {
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  startX = Math.max(0, Math.min(w-1, startX));
+  startY = Math.max(0, Math.min(h-1, startY));
+  var imgData = ctx.getImageData(0, 0, w, h);
+  var data = imgData.data;
+  var si = (startY * w + startX) * 4;
+  var sr = data[si], sg = data[si+1], sb = data[si+2], sa = data[si+3];
+  // Neklikej na tmavé pixely (linky)
+  var brightness = 0.299*sr + 0.587*sg + 0.114*sb;
+  if (brightness < 80) return;
+  var fr = parseInt(fillHex.slice(1,3), 16);
+  var fg = parseInt(fillHex.slice(3,5), 16);
+  var fb = parseInt(fillHex.slice(5,7), 16);
+  // Nebarvi pokud je to skoro stejná barva
+  if (Math.abs(sr-fr)<8 && Math.abs(sg-fg)<8 && Math.abs(sb-fb)<8) return;
+  // Tolerance: pixely s podobnou barvou jako start pixel
+  var TOL2 = 60*60;
+  var stack = [startX, startY];
+  var visited = new Uint8Array(w * h);
+  while (stack.length > 0) {
+    var cy = stack.pop(), cx = stack.pop();
+    if (cx<0||cx>=w||cy<0||cy>=h) continue;
+    var vi = cy*w+cx;
+    if (visited[vi]) continue;
+    visited[vi] = 1;
+    var di = vi*4;
+    // Přeskoč tmavé pixely (linky) – chrání obvod segmentů
+    var br = 0.299*data[di] + 0.587*data[di+1] + 0.114*data[di+2];
+    if (br < 80) continue;
+    var dr=data[di]-sr, dg=data[di+1]-sg, db=data[di+2]-sb;
+    if (dr*dr+dg*dg+db*db > TOL2) continue;
+    data[di]=fr; data[di+1]=fg; data[di+2]=fb; data[di+3]=255;
+    stack.push(cx+1,cy); stack.push(cx-1,cy); stack.push(cx,cy+1); stack.push(cx,cy-1);
+  }
+  ctx.putImageData(imgData, 0, 0);
+  // Překreslit průhledné linky navrch = dokonale čisté hrany
+  var linesImg = window._omalLinesImg;
+  if (linesImg && linesImg.complete && linesImg.naturalWidth > 0) {
+    ctx.drawImage(linesImg, 0, 0, w, h);
+  }
+}
+// Starý alias pro SVG mode (ne canvas)
+function omalFloodFill(canvas, startX, startY, fillHex) {
+  omalFloodFillPlusCover(canvas, startX, startY, fillHex);
+}
+
+function renderOmalov() {
+  var p = OMAL_POSTAVY[omalIdx];
+  if (p.img) { renderOmalovCanvas(p); return; }
+  var mb = document.getElementById('mini-body');
+  if (mb) { mb.style.padding = '0 12px 16px'; mb.style.gap = '8px'; mb.style.overflow = ''; }
+  var vyb = Object.keys(omalStav).length, cel = p.seg.length;
+  var paths = '';
+  for (var i = 0; i < p.seg.length; i++) {
+    var s = p.seg[i], fill = omalStav[s.id] || '#fff9ee';
+    paths += '<g onclick="omalKlik(' + i + ')"><path d="' + s.d + '" fill="' + fill + '" stroke="#222" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></g>';
+  }
+  var svg = '<svg viewBox="0 0 ' + p.vw + ' ' + p.vh + '" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;touch-action:none">'
+    + '<rect width="' + p.vw + '" height="' + p.vh + '" fill="#fff9ee"/>' + paths
+    + '</svg>';
+
+  // Paleta 2x8
+  var html = '<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:5px;width:100%">';
+  for (var j = 0; j < OMAL_BARVY.length; j++) {
+    var b = OMAL_BARVY[j];
+    var extra = (b === '#ffffff') ? 'outline:1px solid rgba(160,160,160,.5);' : '';
+    html += '<div class="omal-bv ' + (b === omalB ? 'on' : '') + '" style="' + extra + 'background:' + b + '" onclick="omalVybrB(' + j + ')"></div>';
+  }
+  html += '</div>';
+
+  // Tečky navigace
+  html += '<div style="display:flex;gap:7px;justify-content:center;align-items:center;padding:4px 0">';
+  for (var d = 0; d < OMAL_POSTAVY.length; d++) {
+    var isAct = d === omalIdx;
+    html += '<div onclick="omalVybrP(' + d + ')" style="width:' + (isAct?'22px':'9px') + ';height:9px;border-radius:' + (isAct?'5px':'50%') + ';background:' + (isAct ? p.barva : 'rgba(255,255,255,.25)') + ';cursor:pointer;transition:all .3s"></div>';
+  }
+  html += '</div>';
+
+  // SVG obrázek se swipem
+  html += '<div id="omal-svg-wrap" style="width:100%;border-radius:16px;overflow:hidden;background:#fff9ee;box-shadow:0 4px 20px rgba(0,0,0,.4);touch-action:pan-y">' + svg + '</div>';
+
+  // Progress bar
+  html += '<div class="prog-bar"><div class="prog-fill" style="width:' + Math.round(vyb / cel * 100) + '%;background:' + p.barva + '"></div></div>';
+
+  // Tlačítka
+  html += '<div style="display:flex;gap:8px;width:100%">'
+    + '<button onclick="omalReset()" style="flex:1;padding:11px 6px;border-radius:13px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.14);color:rgba(255,255,255,.6);font-size:12px;font-weight:700;cursor:pointer">🗑️ Vymazat</button>'
+    + '<button onclick="omalUlozit()" style="flex:1;padding:11px 6px;border-radius:13px;background:rgba(255,215,0,.12);border:1.5px solid rgba(255,215,0,.4);color:#FFD60A;font-size:12px;font-weight:700;cursor:pointer">💾 Uložit</button>'
+    + '</div>';
+
+  document.getElementById('mini-body').innerHTML = html;
+  window._omalP = p;
+
+  // Swipe detekce na SVG
+  var wrap = document.getElementById('omal-svg-wrap');
+  if (wrap) {
+    var sx = 0, sy = 0;
+    wrap.addEventListener('touchstart', function(e) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive:true});
+    wrap.addEventListener('touchend', function(e) {
+      var dx = e.changedTouches[0].clientX - sx;
+      var dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)*1.5) {
+        if (dx < 0 && omalIdx < OMAL_POSTAVY.length-1) { omalVybrP(omalIdx+1); }
+        else if (dx > 0 && omalIdx > 0) { omalVybrP(omalIdx-1); }
+      }
+    }, {passive:true});
+  }
+}
+
+function omalKlik(idx) {
+  var p = window._omalP;
+  if (p && p.seg[idx]) {
+    omalStav[p.seg[idx].id] = omalB;
+    omalStavAll[omalIdx] = omalStav;
+  }
+  renderOmalov();
+}
+function omalVybrB(idx) { omalB = OMAL_BARVY[idx]; document.querySelectorAll('.omal-bv').forEach(function(x, i) { x.classList.toggle('on', i === idx); }); }
+function omalVybrP(idx) {
+  // Uložit stav aktuální postavy
+  var canvas = document.getElementById('omal-canvas');
+  if (canvas) omalCanvasData[omalIdx] = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+  omalStavAll[omalIdx] = omalStav;
+  omalIdx = idx;
+  // Obnovit stav nové postavy
+  omalStav = omalStavAll[idx] || {};
+  renderOmalov();
+}
+function omalReset() {
+  var p = OMAL_POSTAVY[omalIdx];
+  if (p.img) {
+    if (window._omalNakreslObrazek) window._omalNakreslObrazek();
+  } else {
+    omalStav = {};
+    omalStavAll[omalIdx] = {};
+    renderOmalov();
+  }
+}
+function omalUlozit() {
+  var p = OMAL_POSTAVY[omalIdx];
+  if (p.img) {
+    var canvas = document.getElementById('omal-canvas');
+    if (!canvas) return;
+    var url = canvas.toDataURL('image/png');
+    var a = document.createElement('a');
+    a.href = url; a.download = p.name.replace(/\s+/g, '_') + '.png'; a.click();
+  } else {
+    var svg = document.querySelector('.omal-wrap svg');
+    if (!svg) return;
+    var blob = new Blob([svg.outerHTML], {type: 'image/svg+xml'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = p.name + '.svg'; a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+
+// ═══ INIT ═══
+refreshHS();
+renderHryGrid();
+inicializujSlideshow();
+nahodneBarvy();
+
+function nahodneBarvy() {
+  // Paleta kombinací – vždy dvě barvy pro každou kartu
+  var kvizPalety = [
+    {bg:'linear-gradient(135deg,#1e3a8a,#7c3aed,#1e1b4b)',border:'rgba(120,100,255,.5)'},
+    {bg:'linear-gradient(135deg,#7c2d12,#c2410c,#7c3aed)',border:'rgba(251,146,60,.5)'},
+    {bg:'linear-gradient(135deg,#1e1b4b,#4338ca,#0e7490)',border:'rgba(99,102,241,.5)'},
+    {bg:'linear-gradient(135deg,#134e4a,#0e7490,#1e3a8a)',border:'rgba(20,184,166,.5)'},
+    {bg:'linear-gradient(135deg,#4a1d96,#7c3aed,#be185d)',border:'rgba(192,132,252,.5)'},
+    {bg:'linear-gradient(135deg,#0c4a6e,#1e40af,#5b21b6)',border:'rgba(56,189,248,.5)'},
+    {bg:'linear-gradient(135deg,#1a2e05,#365314,#4338ca)',border:'rgba(132,204,22,.45)'},
+    {bg:'linear-gradient(135deg,#450a0a,#991b1b,#7c3aed)',border:'rgba(239,68,68,.5)'}
+  ];
+  var hryPalety = [
+    {bg:'linear-gradient(135deg,#064e3b,#065f46,#7c3aed)',border:'rgba(52,211,153,.45)'},
+    {bg:'linear-gradient(135deg,#1e3a8a,#0e7490,#065f46)',border:'rgba(6,182,212,.45)'},
+    {bg:'linear-gradient(135deg,#713f12,#92400e,#15803d)',border:'rgba(217,119,6,.45)'},
+    {bg:'linear-gradient(135deg,#3b0764,#6d28d9,#065f46)',border:'rgba(167,139,250,.45)'},
+    {bg:'linear-gradient(135deg,#0f172a,#1e3a8a,#065f46)',border:'rgba(99,102,241,.4)'},
+    {bg:'linear-gradient(135deg,#14532d,#166534,#0e7490)',border:'rgba(74,222,128,.45)'},
+    {bg:'linear-gradient(135deg,#7f1d1d,#be185d,#064e3b)',border:'rgba(244,63,94,.45)'},
+    {bg:'linear-gradient(135deg,#0c4a6e,#065f46,#1e1b4b)',border:'rgba(34,211,238,.4)'}
+  ];
+  var kp = kvizPalety[Math.floor(Math.random() * kvizPalety.length)];
+  var hp = hryPalety[Math.floor(Math.random() * hryPalety.length)];
+  var ek = document.getElementById('hcard-kviz');
+  var eh = document.getElementById('hcard-hry');
+  if (ek) { ek.style.background = kp.bg; ek.style.border = '2px solid ' + kp.border; }
+  if (eh) { eh.style.background = hp.bg; eh.style.border = '2px solid ' + hp.border; }
+}
+
+function inicializujSlideshow() {
+  // Vyber 12 nahodnych filmu z databaze
+  var vsechny = ANIMOVANE.slice();
+  var vybrane = mix(vsechny).slice(0, 12);
+  var elA = document.getElementById('home-bg-a');
+  var elB = document.getElementById('home-bg-b');
+  if (!elA || !elB) return;
+
+  var current = 0;
+  var activeEl = elA;
+  var inactiveEl = elB;
+
+  function nacistAZobrazit(film, el, cb) {
+    getPoster(film.imdb, function(src) {
+      if (src) {
+        el.style.backgroundImage = 'url(' + src + ')';
+      }
+      if (cb) cb();
+    });
+  }
+
+  function dalsiSlide() {
+    var nextIdx = (current + 1) % vybrane.length;
+    // Načíst příští poster do neaktivního elementu
+    nacistAZobrazit(vybrane[nextIdx], inactiveEl, function() {
+      // Fade: aktivní → 0, neaktivní → 1
+      activeEl.style.opacity = '0';
+      inactiveEl.style.opacity = '1';
+      // Prohodit role
+      var tmp = activeEl; activeEl = inactiveEl; inactiveEl = tmp;
+      current = nextIdx;
+    });
+  }
+
+  // Načíst první poster ihned
+  nacistAZobrazit(vybrane[0], elA, null);
+  // Přednačíst druhý
+  nacistAZobrazit(vybrane[1], elB, null);
+
+  // Střídat každých 4 sekund
+  window._slideshowTimer = setInterval(dalsiSlide, 4000);
+}
+
+(function() {
+  try {
+    var last = sessionStorage.getItem('fc_screen');
+    if (!last || last === 'home') return;
+    if (last === 'vybrat-kviz' || last === 'vybrat-hry') { showScreen(last); return; }
+    if (last === 'kviz-anim' || last === 'kviz-znalec' || last === 'kviz-90s' || last === 'vysledky') showScreen('vybrat-kviz');
+    else if (last === 'minihra') showScreen('vybrat-hry');
+  } catch(e) {}
+})();
+</script>
+
+</body>
+</html>
